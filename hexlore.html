@@ -1,0 +1,2005 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hexlore — A4 hex plate cartography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="pagerule">@page{size:A4 landscape;margin:0}</style>
+<style>
+  :root{
+    --ink:#0C1720; --panel:#152430; --panel2:#1C2F3D; --raise:#243D4E;
+    --edge:#2B4657; --edge-soft:#1F3543;
+    --text:#D9E5EC; --dim:#8AA4B4; --dimmer:#5F7B8C;
+    --accent:#45C4DE; --brass:#D8AC3E;
+    --paper:#EDE5D5;
+    --pw:297mm; --ph:210mm;
+    --r:3px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--ink); color:var(--text);
+    font:400 14px/1.45 "Archivo",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  button,input,select,textarea{font:inherit;color:inherit}
+
+  header{
+    flex:0 0 auto; display:flex; align-items:center; gap:14px;
+    padding:8px 16px; background:var(--panel); border-bottom:1px solid var(--edge);
+  }
+  .wordmark{font:600 30px/1 "Bodoni Moda",Didot,serif}
+  .wordmark em{font-style:italic;font-weight:400;color:var(--text)}
+  .version{font:400 11px/1 "IBM Plex Mono",monospace;color:var(--dimmer);
+    letter-spacing:.06em;align-self:flex-end;padding-bottom:2px}
+  header .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+
+  .btn{
+    background:var(--panel2); border:1px solid var(--edge); border-radius:var(--r);
+    padding:6px 10px; cursor:pointer; white-space:nowrap; font-size:12.5px;
+    transition:background .12s,border-color .12s,color .12s;
+  }
+  .btn:hover:not(:disabled){background:var(--raise);border-color:var(--accent)}
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn.key{border-color:#3C6274;color:#EAF6FA}
+  .btn[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
+  .btn:focus-visible,.swatch:focus-visible,input:focus-visible,
+  .tool:focus-visible,textarea:focus-visible,select:focus-visible{
+    outline:2px solid var(--accent); outline-offset:1px;
+  }
+
+  .zoom{display:flex;align-items:stretch;border:1px solid var(--edge);
+    border-radius:var(--r);overflow:hidden;background:var(--panel2)}
+  .zoom button{background:transparent;border:0;cursor:pointer;padding:6px 9px;
+    font-size:13px;line-height:1;color:var(--dim)}
+  .zoom button:hover{background:var(--raise);color:#fff}
+  .zoom output{min-width:52px;text-align:center;padding:6px 2px;
+    font:500 11.5px/1.2 "IBM Plex Mono",monospace;color:var(--accent);
+    border-left:1px solid var(--edge-soft);border-right:1px solid var(--edge-soft)}
+  .zoom .fit{border-left:1px solid var(--edge-soft);font-size:11.5px;padding:6px 8px}
+
+  main{flex:1 1 auto; display:flex; min-height:0}
+  #rail{flex:0 0 292px; overflow-y:auto; background:var(--panel);
+    border-right:1px solid var(--edge); padding-bottom:24px}
+  #rail::-webkit-scrollbar{width:9px}
+  #rail::-webkit-scrollbar-thumb{background:var(--edge);border-radius:9px}
+
+  .grp{padding:10px 14px 12px}
+  .grp h2{margin:0 0 10px; font:500 11.5px/1 "IBM Plex Mono",monospace;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--dim);
+    display:flex; align-items:center; gap:8px}
+  .grp h2::after{content:"";flex:1;height:1px;background:var(--edge-soft)}
+
+  /* the plate title sits first, where it can't be missed */
+  .field{display:block;margin-bottom:9px}
+  .field span{display:block;font-size:12.5px;color:var(--dim);margin-bottom:5px}
+  .field input{width:100%}
+  .field input#title{font:400 15px/1.2 "Archivo",system-ui,sans-serif;padding:7px}
+
+  .tools{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .tool{display:flex;align-items:center;gap:7px;text-align:left;
+    background:transparent;border:1px solid var(--edge);border-radius:var(--r);
+    padding:8px 9px;cursor:pointer;font-size:14px}
+  .tool:hover{background:var(--panel2)}
+  .tool[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
+  .tool svg{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.6}
+
+  .row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .row label{font-size:13.5px;color:var(--dim);flex:0 0 68px}
+  .row output{font:500 13.5px/1 "IBM Plex Mono",monospace;color:var(--accent);
+    min-width:46px;text-align:right}
+  input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+  input[type=text],textarea,select{
+    min-width:0;background:#0F1C25;border:1px solid var(--edge);
+    border-radius:var(--r);padding:7px 9px;font-size:14px;font-family:inherit}
+  .row input[type=text],.row textarea,.row select{flex:1}
+  textarea{resize:vertical;min-height:66px;line-height:1.4}
+  .seg{display:flex;border:1px solid var(--edge);border-radius:var(--r);overflow:hidden;flex:1}
+  .seg button{flex:1;background:transparent;border:0;padding:5px 0;cursor:pointer;
+    font-size:13.5px;color:var(--dim)}
+  .seg button[aria-pressed="true"]{background:var(--raise);color:#fff}
+
+  .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .swatch{position:relative;background:#0F1C25;border:1px solid var(--edge);
+    border-radius:var(--r);padding:4px 4px 3px;cursor:pointer;overflow:hidden}
+  .swatch canvas{display:block;width:100%;height:auto;border-radius:2px}
+  .swatch span{display:block;font-size:12px;line-height:1.3;text-align:center;
+    color:var(--text);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .swatch[aria-pressed="true"]{border-color:var(--accent);background:var(--raise)}
+  .swatch[aria-pressed="true"] span{color:#fff}
+
+  .checks{display:grid;gap:6px}
+  .check{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--dim);cursor:pointer}
+  .check input{accent-color:var(--accent);margin:0;width:15px;height:15px}
+  .check:hover{color:var(--text)}
+  .stack{display:grid;gap:6px;margin-top:4px}
+  .note{font:400 12px/1.5 "IBM Plex Mono",monospace;color:var(--dimmer);margin-top:12px}
+
+  #stage{flex:1 1 auto; min-width:0; overflow:auto; padding:22px;
+    background:radial-gradient(120% 90% at 50% 0%, #16262F 0%, #0B141B 70%);
+    display:flex; align-items:flex-start; justify-content:center}
+  /* only the width is ever set in script, so the sheet can never be squashed */
+  #plate{display:block; height:auto; border-radius:1px;
+    box-shadow:0 1px 0 rgba(255,255,255,.14), 0 18px 44px -12px rgba(0,0,0,.85);
+    cursor:crosshair; touch-action:none}
+
+  /* hex inspector, shown as a full page so notes have room to breathe */
+  #insp{
+    position:fixed; inset:0; z-index:40; display:none;
+    background:rgba(6,12,17,.82); padding:4vh 4vw;
+  }
+  #insp.on{display:flex; align-items:stretch; justify-content:center}
+  #insp .isheet{
+    display:flex; flex-direction:column; width:100%; max-width:820px;
+    background:var(--panel); border:1px solid var(--edge); border-radius:7px;
+    box-shadow:0 30px 80px -20px #000; overflow:hidden;
+  }
+  #insp .ihd{display:flex;align-items:center;gap:16px;padding:16px 22px;
+    background:var(--panel2);border-bottom:1px solid var(--edge)}
+  #insp .icoord{font:600 30px/1 "IBM Plex Mono",monospace;
+    letter-spacing:.12em;color:var(--text)}
+  #insp .ioff{font:400 12px/1.6 "IBM Plex Mono",monospace;color:var(--dimmer);margin-top:4px}
+  #insp .ihd .btn{margin-left:auto;font-size:14px;padding:9px 16px}
+  #insp .ibody{display:flex;flex-direction:column;gap:18px;
+    padding:22px;overflow-y:auto;flex:1 1 auto}
+  #insp .ipair{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  #insp .ifield{display:flex;flex-direction:column;gap:7px}
+  #insp .ifield>span{font:500 11px/1 "IBM Plex Mono",monospace;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  #insp .ifield input,#insp .ifield select,#insp .ifield textarea{color:var(--text);
+    width:100%;font-size:16px;padding:11px 13px;border-radius:4px}
+  #insp .ifield input{font-weight:500}
+  #insp .igrow{flex:1 1 auto;min-height:0}
+  #insp .igrow textarea{flex:1 1 auto;min-height:34vh;resize:none;
+    line-height:1.65;font-size:15.5px}
+  #insp .ifoot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  #insp .ifoot .btn{font-size:13.5px;padding:9px 14px}
+  #insp .ibtn-save{background:#2A5C8A;border-color:#3E7AB8;color:#fff;font-weight:600}
+  #insp .ibtn-save:hover{background:#3468A0;border-color:#5094D4}
+  #insp .ihelp{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer)}
+
+  /* custom tile editor */
+  #tileModal{position:fixed;inset:0;z-index:45;display:none;
+    background:rgba(6,12,17,.82);padding:4vh 4vw}
+  #tileModal.on{display:flex;align-items:center;justify-content:center}
+  #tileModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:520px;
+    max-height:92vh;background:var(--panel);border:1px solid var(--edge);
+    border-radius:7px;box-shadow:0 30px 80px -20px #000;overflow:hidden}
+  #tileModal .tmhd{display:flex;align-items:center;gap:16px;padding:14px 20px;
+    background:var(--panel2);border-bottom:1px solid var(--edge)}
+  #tileModal .tmhd b{font:600 16px/1 "Archivo",sans-serif}
+  #tileModal .tmhd .btn{margin-left:auto}
+  #tileModal .tmbody{display:flex;flex-direction:column;gap:16px;padding:20px;overflow-y:auto}
+  #tileModal .ifield{display:flex;flex-direction:column;gap:7px}
+  #tileModal .ifield>span{font:500 11px/1 "IBM Plex Mono",monospace;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  #tileModal input[type=text]{width:100%;font-size:15px;padding:10px 12px}
+  #tileModal input[type=color]{width:100%;height:34px;padding:2px;cursor:pointer;
+    background:#0F1C25;border:1px solid var(--edge);border-radius:var(--r)}
+  .tmswatches{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+  .tmswatches button{aspect-ratio:1;border:2px solid transparent;border-radius:4px;
+    cursor:pointer;padding:0}
+  .tmswatches button[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+  .svgpick{display:flex;gap:8px}
+  .svgpick .btn{flex:1}
+  .svgname{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer);
+    padding:7px 9px;background:#0F1C25;border:1px dashed var(--edge);
+    border-radius:var(--r);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #tmPreview{width:100%;height:auto;border-radius:4px;background:var(--paper)}
+  .swatch .del{position:absolute;top:2px;right:2px;width:16px;height:16px;
+    border:0;border-radius:3px;background:rgba(10,20,28,.75);color:#E88;
+    font-size:12px;line-height:1;cursor:pointer;padding:0;display:none}
+  .swatch:hover .del{display:block}
+  .swatch .del:hover{background:#8B2A2A;color:#fff}
+
+  footer{flex:0 0 auto; display:flex; gap:18px; align-items:center;
+    padding:8px 16px; background:var(--panel); border-top:1px solid var(--edge);
+    font:400 12.5px/1.4 "IBM Plex Mono",monospace; color:var(--dim);
+    letter-spacing:.04em; overflow:hidden; white-space:nowrap}
+  footer b{color:var(--dim);font-weight:500}
+  footer .hint{overflow:hidden;text-overflow:ellipsis}
+
+  @media (max-width:940px){
+    main{flex-direction:column}
+    #rail{flex:0 0 auto;max-height:42vh;border-right:0;border-bottom:1px solid var(--edge)}
+    #stage{padding:10px}
+    header{flex-wrap:wrap;gap:8px 12px}
+    #insp{padding:0}
+    #insp .isheet{border-radius:0;border:0;max-width:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* the plate IS an A4 sheet, so printing lays it on the page 1:1 */
+  @media print{
+    body{background:#fff;overflow:visible;display:block}
+    header,#rail,footer,#insp{display:none!important}
+    main{display:block}
+    #stage{padding:0;overflow:visible;background:#fff;display:block}
+    #plate{box-shadow:none;border-radius:0;
+      width:var(--pw)!important;height:var(--ph)!important}
+  }
+</style>
+
+<header>
+  <div class="wordmark">Hex<em>lore</em></div>
+  <span class="version">v0.1</span>
+  <a href="https://ko-fi.com/smilingdmrpg" target="_blank" rel="noopener"
+     style="font:500 12px/1 'IBM Plex Mono',monospace;color:var(--dimmer);
+            text-decoration:none;border:1px solid var(--edge);border-radius:var(--r);
+            padding:5px 10px;white-space:nowrap;transition:color .12s,border-color .12s"
+     onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'"
+     onmouseout="this.style.color='var(--dimmer)';this.style.borderColor='var(--edge)'"
+     title="Support Hexlore on Ko-fi">☕ Ko-fi</a>
+  <div class="acts">
+    <div class="zoom">
+      <button id="zOut" title="Zoom out (−)">&minus;</button>
+      <output id="zoomOut">100%</output>
+      <button id="zIn" title="Zoom in (+)">+</button>
+      <button class="fit" id="zFit" title="Fit the sheet to the window (0)">Fit</button>
+    </div>
+    <button class="btn" id="notesBtn" title="View all hex notes (N)">Notes</button>
+    <button class="btn" id="open">Import</button>
+    <button class="btn" id="save">Save file</button>
+    <button class="btn" id="png">Export PNG</button>
+    <button class="btn key" id="print">Print A4</button>
+  </div>
+</header>
+
+<main>
+  <div id="rail">
+    <div class="grp">
+      <h2>Title</h2>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="title" maxlength="42" placeholder="Untitled plate"
+               style="flex:1;background:#0F1C25;border:1px solid var(--edge);border-radius:var(--r);padding:8px 10px;font-size:14px">
+        <button class="btn" id="randTitle" title="Generate a random fantasy name" style="font-size:17px;padding:6px 10px">⚄</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>Sheet</h2>
+      <div class="row"><label for="cols">Columns</label><input type="range" id="cols" min="4" max="40" value="20"><output id="colsOut">20</output></div>
+      <div class="row"><label for="rows">Rows</label><input type="range" id="rows" min="4" max="40" value="14"><output id="rowsOut">14</output></div>
+      <div class="note" id="fitNote"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Tool</h2>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn" id="undo" title="Undo (Ctrl+Z)" disabled style="flex:1">Undo</button>
+        <button class="btn" id="redo" title="Redo (Ctrl+Shift+Z)" disabled style="flex:1">Redo</button>
+      </div>
+      <div class="row" id="brushRow" style="margin-top:12px;margin-bottom:12px">
+        <label for="brush">Brush</label>
+        <input type="range" id="brush" min="0" max="2" step="1" value="0">
+        <output id="brushOut">1 hex</output>
+      </div>
+      <div class="tools" id="tools"></div>
+      <div class="stack" style="margin-top:8px"><button class="btn" id="clear">Clear sheet</button></div>
+    </div>
+
+    <div class="grp">
+      <h2>Tiles</h2>
+      <div class="swatches" id="terrains"></div>
+      <div class="stack"><button class="btn" id="newTile">+ New tile</button></div>
+    </div>
+
+    <div class="grp">
+      <h2>Features</h2>
+      <div class="swatches" id="features"></div>
+    </div>
+
+    <div class="grp" style="border-bottom:0">
+      <h2>Show</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="cGrid" checked> Hex outlines</label>
+        <label class="check"><input type="checkbox" id="cCoord" checked> Coordinates</label>
+        <label class="check"><input type="checkbox" id="cNotes" checked> Note marks</label>
+        <label class="check"><input type="checkbox" id="cMono"> Monochrome</label>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div id="stage"><canvas id="plate"></canvas></div>
+</main>
+
+<div id="insp">
+  <div class="isheet">
+    <div class="ihd">
+      <div class="ititle">
+        <div class="icoord" id="iCoord">0101</div>
+        <div class="ioff" id="iOff"></div>
+      </div>
+      <button class="btn" id="iClose">Close</button>
+    </div>
+    <div class="ibody">
+      <label class="ifield"><span>Place name</span>
+        <input type="text" id="iName" maxlength="48" placeholder="unnamed"></label>
+      <label class="ifield igrow"><span>Notes</span>
+        <textarea id="iNote" maxlength="4000"
+          placeholder="Encounters, rumours, whatever the party needs to know."></textarea></label>
+      <div class="ifoot">
+        <button class="btn ibtn-save" id="iSave">Save</button>
+        <button class="btn ibtn-wipe" id="iWipe">Clear this hex</button>
+        <span class="ihelp">Esc to close</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tileModal">
+  <div class="tmsheet">
+    <div class="tmhd">
+      <b id="tmTitle">New tile</b>
+      <button class="btn" id="tmClose">Close</button>
+    </div>
+    <div class="tmbody">
+      <label class="ifield"><span>Name</span>
+        <input type="text" id="tmName" maxlength="18" placeholder="e.g. Tundra"></label>
+      <div class="ifield"><span>Colour</span>
+        <div class="tmswatches" id="tmColors"></div>
+        <input type="color" id="tmColor" value="#CFE0E8">
+      </div>
+      <div class="ifield"><span>Symbol</span>
+        <input type="file" id="tmFile" accept=".svg,image/svg+xml" hidden>
+        <div class="svgpick">
+          <button class="btn" id="tmPick">Choose SVG file</button>
+          <button class="btn" id="tmDrop">Remove</button>
+        </div>
+        <div class="svgname" id="tmFileName">No symbol — a flat colour tile</div>
+        <label class="check" id="tmKeepWrap" style="display:none">
+          <input type="checkbox" id="tmKeep"> Keep the file's own colours</label>
+      </div>
+      <div class="ifield"><span>Preview</span>
+        <canvas id="tmPreview" width="260" height="120"></canvas>
+      </div>
+      <div class="ifoot">
+        <button class="btn ibtn-save" id="tmSave">Save tile</button>
+        <span class="ihelp" id="tmWarn"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="notesPage" style="display:none;position:fixed;inset:0;z-index:50;
+  background:var(--ink);flex-direction:column;">
+  <div style="display:flex;align-items:center;gap:16px;padding:14px 22px;
+    border-bottom:1px solid var(--edge);background:var(--panel);flex:0 0 auto">
+    <div style="font:600 22px/1 'Bodoni Moda',Didot,serif">Hex<em style="font-style:italic;font-weight:400">lore</em>&ensp;<span style="font:400 14px/1 'IBM Plex Mono',monospace;color:var(--dimmer);letter-spacing:.08em;vertical-align:middle">NOTES</span></div>
+    <button class="btn" id="notesClose" style="margin-left:auto">Close</button>
+  </div>
+  <div id="notesBody" style="flex:1 1 auto;overflow-y:auto;padding:24px 28px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;
+    align-content:start"></div>
+</div>
+<footer>
+  <span id="readout"><b>—</b></span>
+  <span style="flex:1"></span>
+  <span style="color:var(--dimmer);font-size:11px">© 2026 Hexlore · <a href="https://ko-fi.com/smilingdmrpg" target="_blank" rel="noopener" style="color:var(--dimmer);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--dimmer)'">smilingdmrpg</a></span>
+  <span class="hint" id="hint">Drag to paint · right-click erases</span>
+</footer>
+
+<script>
+"use strict";
+
+/* ══════════════ colour ══════════════ */
+const PAPER="#EDE5D5", PAPERLINE="#B4A78E", INK="#22323C", META="#7A6E58";
+const LIGHT_TEXT="#F6F2E9", DARK_TEXT="#1A2530";
+
+function hxc(c){
+  if(c[0]!=="#"){ const n=c.match(/-?\d+(\.\d+)?/g)||[0,0,0]; return [+n[0],+n[1],+n[2]]; }
+  c=c.slice(1);
+  if(c.length===3) c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)];
+}
+function rgbs(a){ return "rgb("+(a[0]|0)+","+(a[1]|0)+","+(a[2]|0)+")"; }
+function shade(col,amt){ const c=hxc(col), t=amt<0?0:255, p=Math.abs(amt);
+  return rgbs([c[0]+(t-c[0])*p, c[1]+(t-c[1])*p, c[2]+(t-c[2])*p]); }
+
+/* WCAG relative luminance, used to decide light-on-dark vs dark-on-light */
+function lum(col){
+  const c=hxc(col), f=v=>{ v/=255; return v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055,2.4); };
+  return .2126*f(c[0]) + .7152*f(c[1]) + .0722*f(c[2]);
+}
+function contrastInk(bgLum){
+  const L=lum(LIGHT_TEXT), D=lum(DARK_TEXT);
+  const cl=(L+.05)/(bgLum+.05), cd=(bgLum+.05)/(D+.05);
+  return cd>=cl ? DARK_TEXT : LIGHT_TEXT;
+}
+
+/* ══════════════ symbols ══════════════
+   Flat line art, one stroke weight, no shading and nothing random: every tile
+   of a given type carries the same symbols in the same places. Symbols are
+   drawn in page space, so they stay upright whichever way the hexes sit.
+   All sizes are millimetres; layout offsets are fractions of the hex radius. */
+
+/* When coordinates are shown the symbols are squeezed upward so the bottom of
+   the hex stays clear for the number. Neutral (1, 0) otherwise. */
+let SYM_SQUASH=1, SYM_SHIFT=0;
+function spots(x,y,s,pts){
+  return pts.map(([dx,dy])=>[x+dx*s, y+(dy*SYM_SQUASH+SYM_SHIFT)*s]);
+}
+function pen(c,col,s){ c.strokeStyle=col; c.lineWidth=s*.055; c.lineCap="round"; c.lineJoin="round"; }
+
+/* broadleaf tree: short trunk under a lobed canopy */
+function symTree(c,x,y,k){
+  c.beginPath(); c.moveTo(x,y+k*.95); c.lineTo(x,y+k*.25); c.stroke();
+  c.beginPath();
+  c.moveTo(x-k*.9, y+k*.3);
+  c.quadraticCurveTo(x-k*1.05, y-k*.5, x-k*.32, y-k*.55);
+  c.quadraticCurveTo(x-k*.1,  y-k*1.1, x+k*.36, y-k*.68);
+  c.quadraticCurveTo(x+k*1.05,y-k*.55, x+k*.9,  y+k*.3);
+  c.quadraticCurveTo(x,       y+k*.62, x-k*.9,  y+k*.3);
+  c.stroke();
+}
+/* palm: bare stem with a spray of fronds */
+function symPalm(c,x,y,k){
+  c.beginPath(); c.moveTo(x-k*.08,y+k); c.quadraticCurveTo(x+k*.08,y+k*.3,x,y-k*.15); c.stroke();
+  for(let i=-2;i<=2;i++){
+    const a=-Math.PI/2 + i*.6;
+    c.beginPath(); c.moveTo(x,y-k*.15);
+    c.quadraticCurveTo(x+Math.cos(a)*k*.75, y+Math.sin(a)*k*.85,
+                       x+Math.cos(a)*k*1.05, y+Math.sin(a)*k*.5);
+    c.stroke();
+  }
+}
+/* palm tree: tapered trunk under filled leaf blades — the fronds carry real
+   width, which is what separates a palm from a spider at map scale */
+function symPalmTree(c,x,y,k){
+  c.fillStyle=c.strokeStyle;
+  // trunk, slightly wider at the foot
+  c.beginPath();
+  c.moveTo(x-k*.1,  y+k);
+  c.lineTo(x+k*.1,  y+k);
+  c.lineTo(x+k*.05, y-k*.34);
+  c.lineTo(x-k*.05, y-k*.34);
+  c.closePath(); c.fill();
+  const cx=x, cy=y-k*.42;
+  // each frond is a closed blade: out along a bowed upper edge to the tip,
+  // back along a flatter lower edge — a filled, tapered leaf
+  function blade(ang,len,w){
+    const dx=Math.sin(ang), dy=-Math.cos(ang);
+    const px=dy, py=-dx;                                  // perpendicular, up-ish
+    const droop=k*.5*Math.abs(dx);
+    const tx=cx+dx*k*len, ty=cy+dy*k*len*.8+droop;        // drooping tip
+    const ux=cx+dx*k*len*.48+px*k*w,   uy=cy+dy*k*len*.48+py*k*w;
+    const lx=cx+dx*k*len*.5 -px*k*w*.25, ly=cy+dy*k*len*.5 -py*k*w*.25;
+    c.beginPath();
+    c.moveTo(cx,cy);
+    c.quadraticCurveTo(ux,uy,tx,ty);
+    c.quadraticCurveTo(lx,ly,cx,cy);
+    c.closePath(); c.fill();
+  }
+  blade(-1.35, 1.0, .3);
+  blade(-0.72, 1.0, .3);
+  blade(-0.08, 0.85,.26);
+  blade( 0.55, 1.0, .3);
+  blade( 1.3,  1.0, .3);
+}
+/* upward arrow */
+function symArrow(c,x,y,k){
+  c.beginPath(); c.moveTo(x,y+k*.8); c.lineTo(x,y-k*.6); c.stroke();
+  c.beginPath(); c.moveTo(x,y-k*.6); c.lineTo(x-k*.38,y-k*.1); c.stroke();
+  c.beginPath(); c.moveTo(x,y-k*.6); c.lineTo(x+k*.38,y-k*.1); c.stroke();
+}
+/* mountain: one solid triangle */
+function symPeak(c,x,y,k,fill){
+  c.fillStyle=fill;
+  c.beginPath(); c.moveTo(x,y-k); c.lineTo(x+k*.86,y+k*.66); c.lineTo(x-k*.86,y+k*.66);
+  c.closePath(); c.fill();
+}
+/* hill: a single rounded rise */
+function symHill(c,x,y,k){
+  c.beginPath(); c.moveTo(x-k,y+k*.42);
+  c.quadraticCurveTo(x, y-k*.95, x+k, y+k*.42); c.stroke();
+}
+/* grass: a short spray of blades */
+function symGrass(c,x,y,k){
+  for(let i=-1;i<=1;i++){
+    const bx=x+i*k*.36;
+    c.beginPath(); c.moveTo(bx, y+k*.48);
+    c.quadraticCurveTo(bx+k*.07, y, bx+k*.22, y-k*.52); c.stroke();
+  }
+}
+/* reeds standing in water: blades over two water lines */
+function symReeds(c,x,y,k){
+  for(let i=-1;i<=1;i++){
+    c.beginPath(); c.moveTo(x+i*k*.4, y+k*.5);
+    c.quadraticCurveTo(x+i*k*.48, y-k*.2, x+i*k*.72, y-k*.8); c.stroke();
+  }
+  c.beginPath(); c.moveTo(x-k*.85,y+k*.62); c.lineTo(x+k*.85,y+k*.62);
+  c.moveTo(x-k*.45,y+k*.9); c.lineTo(x+k*.45,y+k*.9); c.stroke();
+}
+/* sand: stipple, deliberately nothing like the hill curve */
+function symSand(c,x,y,k,col){
+  c.fillStyle=col;
+  c.beginPath(); c.arc(x,y,k,0,6.283); c.fill();
+}
+/* open water: a short wave dash */
+function symWave(c,x,y,k){
+  c.beginPath(); c.moveTo(x-k,y);
+  c.quadraticCurveTo(x-k*.34,y-k*.34,x,y);
+  c.quadraticCurveTo(x+k*.34,y+k*.34,x+k,y); c.stroke();
+}
+
+/* ══════════════ symbol library ══════════════
+   Every tile — built in or user made — picks one of these. Keeping them in a
+   single registry is what lets a custom tile reuse the same drawing code. */
+const SYMBOL_LIB = {
+  none:   { name:"None",   draw(){} },
+  grass:  { name:"Grass",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[-.34,-.02],[.02,-.3],[.32,.16]]).forEach(p=>symGrass(c,p[0],p[1],s*.24)); } },
+  trees:  { name:"Trees",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[0,-.3],[-.36,.12],[.36,.14]]).forEach(p=>symTree(c,p[0],p[1],s*.24)); } },
+  palm:   { name:"Palm",   draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[0,-.08]]).forEach(p=>symPalmTree(c,p[0],p[1],s*.34)); } },
+  palms3: { name:"Palms",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[0,-.3],[-.36,.18],[.36,.16]]).forEach(p=>symPalmTree(c,p[0],p[1],s*.3)); } },
+  arrows: { name:"Arrows", draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[0,-.28],[-.34,.22],[.34,.2]]).forEach(p=>symArrow(c,p[0],p[1],s*.4)); } },
+  peaks:  { name:"Peaks",  draw(c,x,y,s,m){
+    spots(x,y,s,[[0,-.02]]).forEach(p=>symPeak(c,p[0],p[1],s*.41,m)); } },
+  hills:  { name:"Hills",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[-.26,-.14],[.24,.16]]).forEach(p=>symHill(c,p[0],p[1],s*.32)); } },
+  reeds:  { name:"Reeds",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[-.3,-.14],[.28,.16]]).forEach(p=>symReeds(c,p[0],p[1],s*.26)); } },
+  waves:  { name:"Waves",  draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[-.26,-.28],[.22,-.04],[-.08,.24]]).forEach(p=>symWave(c,p[0],p[1],s*.26)); } },
+  waves2: { name:"2 Waves",draw(c,x,y,s,m){ pen(c,m,s);
+    spots(x,y,s,[[-.16,-.16],[.16,.16]]).forEach(p=>symWave(c,p[0],p[1],s*.3)); } },
+  sand:   { name:"Sand",   draw(c,x,y,s,m){ pen(c,m,s);
+    c.lineWidth=s*.058; c.lineCap="butt";
+    const yy=spots(x,y,s,[[0,0]])[0][1];
+    // long dash + short dash, same weight as the hill curves
+    c.beginPath(); c.moveTo(x-s*.54,yy); c.lineTo(x+s*.12,yy); c.stroke();
+    c.beginPath(); c.moveTo(x+s*.28,yy); c.lineTo(x+s*.48,yy); c.stroke(); } },
+  dots:   { name:"Stipple",draw(c,x,y,s,m){ c.fillStyle=m;
+    spots(x,y,s,[[-.3,-.2],[.06,-.32],[.3,-.08],[-.16,.08],[.24,.24],[-.34,.26]])
+      .forEach(p=>{ c.beginPath(); c.arc(p[0],p[1],s*.07,0,6.283); c.fill(); }); } },
+  crosses:{ name:"Crosses",draw(c,x,y,s,m){ pen(c,m,s); c.lineWidth=s*.06;
+    spots(x,y,s,[[-.28,-.16],[.24,-.2],[0,.2]]).forEach(p=>{
+      const k=s*.13;
+      c.beginPath(); c.moveTo(p[0]-k,p[1]); c.lineTo(p[0]+k,p[1]);
+      c.moveTo(p[0],p[1]-k); c.lineTo(p[0],p[1]+k); c.stroke(); }); } }
+};
+
+/* ══════════════ uploaded SVG symbols ══════════════
+   A custom tile can carry its own SVG. Images decode asynchronously, so each
+   one is cached and the plate repainted once it is ready. Loading the file as
+   an <img> means any script inside it is inert. */
+const SVG_CACHE={};
+/* Browsers size an <img> from the SVG's own width/height. Files that carry
+   only a viewBox render at a UA default, so give them explicit dimensions. */
+function normaliseSvg(txt){
+  if(!/xmlns=/i.test(txt)) txt=txt.replace(/<svg/i,'<svg xmlns="http://www.w3.org/2000/svg"');
+  const hasW=/<svg[^>]*\swidth=/i.test(txt), hasH=/<svg[^>]*\sheight=/i.test(txt);
+  if(!hasW || !hasH){
+    const m=txt.match(/viewBox=["']\s*[-\d.]+[ ,]+[-\d.]+[ ,]+([\d.]+)[ ,]+([\d.]+)/i);
+    const w=m?parseFloat(m[1]):256, h=m?parseFloat(m[2]):256;
+    txt=txt.replace(/<svg/i,'<svg width="'+w+'" height="'+h+'"');
+  }
+  return txt;
+}
+/* base64 rather than percent-encoding: some renderers reject the latter.
+   Encode via TextEncoder so non-ASCII inside the file survives btoa. */
+function svgToUrl(txt){
+  const bytes=new TextEncoder().encode(txt);
+  let bin=""; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return "data:image/svg+xml;base64,"+btoa(bin);
+}
+function loadTileSvg(id, txt, done){
+  if(typeof Image==="undefined" || !txt) return;
+  const img=new Image();
+  img.onload =()=>{ SVG_CACHE[id]={img,ready:true}; if(done) done(); };
+  img.onerror=()=>{ SVG_CACHE[id]={ready:false}; };
+  img.src=svgToUrl(normaliseSvg(txt));
+  if(!SVG_CACHE[id]) SVG_CACHE[id]={ready:false};
+}
+/* Recolour the symbol to the tile's mark colour so it always reads, cached
+   per colour so the compositing only happens when something changes. */
+function svgTinted(e, tint){
+  if(e.tintCv && e.tintCol===tint) return e.tintCv;
+  const px=256;
+  const off=document.createElement("canvas"); off.width=off.height=px;
+  const oc=off.getContext("2d");
+  oc.drawImage(e.img,0,0,px,px);
+  oc.globalCompositeOperation="source-in";
+  oc.fillStyle=tint; oc.fillRect(0,0,px,px);
+  e.tintCv=off; e.tintCol=tint;
+  return off;
+}
+function drawSvgSymbol(c,x,y,s,id,tint,keepColour){
+  const e=SVG_CACHE[id];
+  if(!e||!e.ready) return;
+  const box=s*1.2*SYM_SQUASH, yy=y+s*SYM_SHIFT;
+  const src=keepColour ? e.img : svgTinted(e,tint);
+  c.drawImage(src, x-box/2, yy-box/2, box, box);
+}
+
+/* ══════════════ tiles ══════════════ */
+const BUILTIN_TILES = [
+  { id:"sea",      name:"Sea",      base:"#58A8D8", sym:"waves" },
+  { id:"lake",     name:"Lake",     base:"#7FCFEA", sym:"waves2" },
+  { id:"plain",    name:"Plain",    base:"#8EBE80", sym:"none"  },
+  { id:"forest",   name:"Forest",   base:"#8EBE80", sym:"trees" },
+  { id:"jungle",   name:"Jungle",   base:"#2A7248", sym:"palms3" },
+  { id:"swamp",    name:"Swamp",    base:"#AEB4AD", sym:"reeds" },
+  { id:"desert",   name:"Desert",   base:"#F5CE94", sym:"sand"  },
+  { id:"oasis",    name:"Oasis",    base:"#F5CE94", sym:"palm"  },
+  { id:"hills",    name:"Hills",    base:"#F5CE94", sym:"hills" },
+  { id:"mountain", name:"Mountain", base:"#B58A57", sym:"peaks" }
+];
+
+function makeTile(spec){
+  return {
+    id:spec.id, name:spec.name, base:spec.base, sym:spec.sym, custom:!!spec.custom,
+    svg:spec.svg||null, svgName:spec.svgName||"", keepColour:!!spec.keepColour,
+    draw(c,x,y,s,d){
+      // Same mark in both colour and mono — one consistent intensity
+      const m = S.mono ? this.mark : this.mark;
+      if(this.svg){ drawSvgSymbol(c,x,y,s,this.id,m,this.keepColour&&!S.mono); return; }
+      const L=SYMBOL_LIB[this.sym]; if(L) L.draw(c,x,y,s,m);
+    }
+  };
+}
+function tileTones(t){
+  t.lum=lum(t.base);
+  t.mark = t.lum>.2 ? shade(t.base,-.38) : shade(t.base,.30);
+  t.ink  = contrastInk(t.lum);
+  return t;
+}
+const TERRAINS = BUILTIN_TILES.map(s=>tileTones(makeTile(s)));
+const T_BY_ID={}; TERRAINS.forEach((t,i)=>{ T_BY_ID[t.id]=i+1; });
+
+/* Rebuild the tile list after custom tiles change, remapping any painted
+   hexes through their ids so nothing shifts underneath the map. */
+function rebuildTiles(){
+  const oldIds=TERRAINS.map(t=>t.id);
+  TERRAINS.length=0;
+  BUILTIN_TILES.forEach(s=>TERRAINS.push(tileTones(makeTile(s))));
+    (S.custom||[]).forEach(s=>{
+    TERRAINS.push(tileTones(makeTile({id:s.id,name:s.name,base:s.base,sym:s.sym,
+      svg:s.svg,svgName:s.svgName,keepColour:s.keepColour,custom:true})));
+    if(s.svg && !(SVG_CACHE[s.id]&&SVG_CACHE[s.id].ready))
+      loadTileSvg(s.id,s.svg,()=>{ if(typeof buildTileSwatches==="function") buildTileSwatches();
+                                   if(typeof refresh==="function") refresh(); });
+  });
+  for(const k in T_BY_ID) delete T_BY_ID[k];
+  TERRAINS.forEach((t,i)=>{ T_BY_ID[t.id]=i+1; });
+  if(S.terr){
+    for(let i=0;i<S.terr.length;i++){
+      const v=S.terr[i]; if(!v) continue;
+      const id=oldIds[v-1];
+      S.terr[i]= id ? (T_BY_ID[id]||0) : 0;
+    }
+  }
+  if(!T_BY_ID[curT]) curT=TERRAINS[0].id;
+}
+const PAPER_INK = contrastInk(lum(PAPER));
+
+/* ══════════════ feature glyphs — flat, single colour, no halo ══════════════ */
+let GLYPH=INK, GLYPH_BG=PAPER;
+function roof(c,x,y,w,h){ c.beginPath(); c.moveTo(x-w,y); c.lineTo(x,y-h); c.lineTo(x+w,y); c.closePath(); c.fill(); }
+function house(c,x,y,u){ c.fillStyle=GLYPH; c.fillRect(x-u*.5,y-u*.05,u,u*.62); roof(c,x,y-u*.02,u*.68,u*.5); }
+const FEATURES = [
+  { id:"town", name:"Town", draw(c,x,y,u){
+      // Small filled circle — Hexographer town marker
+      c.fillStyle=GLYPH;
+      c.beginPath(); c.arc(x,y,u*.42,0,6.283); c.fill();
+    }},
+  { id:"city", name:"City", draw(c,x,y,u){
+      // Filled circle inside an outer ring — Hexographer city marker
+      c.strokeStyle=GLYPH; c.lineWidth=u*.14; c.lineCap="butt";
+      c.beginPath(); c.arc(x,y,u*.72,0,6.283); c.stroke();
+      c.fillStyle=GLYPH;
+      c.beginPath(); c.arc(x,y,u*.42,0,6.283); c.fill();
+    }},
+  { id:"capitol", name:"Capitol", draw(c,x,y,u){
+      // Outer circle + filled 5-pointed star inside
+      c.strokeStyle=GLYPH; c.lineWidth=u*.12; c.lineCap="butt";
+      c.beginPath(); c.arc(x,y,u*.72,0,6.283); c.stroke();
+      // filled star
+      c.fillStyle=GLYPH;
+      const pts=5, R=u*.52, r=u*.22;
+      c.beginPath();
+      for(let i=0;i<pts*2;i++){
+        const a=i*Math.PI/pts - Math.PI/2;
+        const rad=(i%2===0)?R:r;
+        const px=x+rad*Math.cos(a), py=y+rad*Math.sin(a);
+        i?c.lineTo(px,py):c.moveTo(px,py);
+      }
+      c.closePath(); c.fill();
+    }},
+  { id:"keep", name:"Castle", draw(c,x,y,u){
+      // Open square outline — Hexographer castle marker
+      c.strokeStyle=GLYPH; c.lineWidth=u*.16; c.lineJoin="miter"; c.lineCap="butt";
+      const h=u*.84;
+      c.strokeRect(x-h/2, y-h/2, h, h);
+    }},
+  { id:"tower", name:"Tower", draw(c,x,y,u){
+      c.fillStyle=GLYPH; c.fillRect(x-u*.24,y-u*.6,u*.48,u*1.1);
+      for(let i=-1;i<=1;i++) c.fillRect(x+i*u*.19-u*.07,y-u*.78,u*.14,u*.2);
+      c.fillStyle=GLYPH_BG; c.fillRect(x-u*.08,y+u*.2,u*.16,u*.3); }},
+  { id:"ruin", name:"Ruins", draw(c,x,y,u){
+      // Filled black square — Hexographer ruins marker
+      c.fillStyle=GLYPH;
+      const h=u*.84;
+      c.fillRect(x-h/2, y-h/2, h, h);
+    }},
+  { id:"cave", name:"Cave", draw(c,x,y,u){
+      // rocky hillside drawn as an outline, with a solid dark opening
+      c.strokeStyle=GLYPH; c.lineWidth=u*.15;
+      c.lineJoin="round"; c.lineCap="round";
+      c.beginPath();
+      c.moveTo(x-u*.8, y+u*.48);
+      c.lineTo(x-u*.58,y-u*.04);
+      c.lineTo(x-u*.28,y-u*.34);
+      c.lineTo(x+u*.04,y-u*.5);
+      c.lineTo(x+u*.34,y-u*.32);
+      c.lineTo(x+u*.6, y-u*.02);
+      c.lineTo(x+u*.8, y+u*.48);
+      c.stroke();
+      c.lineWidth=u*.13;                                   // ground
+      c.beginPath(); c.moveTo(x-u*.86,y+u*.5); c.lineTo(x+u*.86,y+u*.5); c.stroke();
+      c.fillStyle=GLYPH;
+      c.beginPath();
+      c.moveTo(x-u*.23,y+u*.48);
+      c.quadraticCurveTo(x-u*.25,y+u*.04,x,y+u*.02);
+      c.quadraticCurveTo(x+u*.25,y+u*.04,x+u*.23,y+u*.48);
+      c.closePath(); c.fill(); }},
+  { id:"temple", name:"Temple", draw(c,x,y,u){
+      c.fillStyle=GLYPH; roof(c,x,y-u*.1,u*.76,u*.48);
+      for(let i=-1;i<=1;i++) c.fillRect(x+i*u*.3-u*.09,y-u*.08,u*.18,u*.48);
+      c.fillRect(x-u*.68,y+u*.4,u*1.36,u*.16); }},
+  { id:"camp", name:"Camp", draw(c,x,y,u){
+      c.fillStyle=GLYPH;
+      c.beginPath(); c.moveTo(x,y-u*.58); c.lineTo(x+u*.6,y+u*.5); c.lineTo(x-u*.6,y+u*.5); c.closePath(); c.fill();
+      c.fillStyle=GLYPH_BG;
+      c.beginPath(); c.moveTo(x,y-u*.14); c.lineTo(x+u*.18,y+u*.5); c.lineTo(x-u*.18,y+u*.5); c.closePath(); c.fill(); }},
+  { id:"bridge", name:"Bridge", draw(c,x,y,u){
+      /* Traced as a fixed 400×300 vector, then scaled — one filled outline
+         for the deck+legs+arch, plus a single thick wavy stroke below. */
+      const SC=u/165, ox=x, oy=y-u*.36;
+      const P=(px,py)=>[ox+(px-200)*SC, oy+(py-118)*SC];
+
+      c.fillStyle=GLYPH;
+      c.beginPath();
+      let p;
+      p=P(62,18);  c.moveTo(p[0],p[1]);
+      p=P(338,18); c.lineTo(p[0],p[1]);                                   // top edge
+      p=P(382,62); c.quadraticCurveTo(...P(382,18),p[0],p[1]);            // top-right corner
+      p=P(382,158);c.lineTo(p[0],p[1]);                                   // outer right edge
+      p=P(358,182);c.quadraticCurveTo(...P(382,182),p[0],p[1]);           // bottom-right corner
+      p=P(292,182);c.lineTo(p[0],p[1]);                                   // bottom of right leg
+      p=P(292,98); c.lineTo(p[0],p[1]);                                   // up inner-right edge
+      // arch: rounded span from right springer to left springer
+      p=P(108,98);
+      c.bezierCurveTo(...P(292,30),...P(108,30),p[0],p[1]);
+      p=P(108,182);c.lineTo(p[0],p[1]);                                   // down inner-left edge
+      p=P(42,182); c.lineTo(p[0],p[1]);                                   // bottom of left leg
+      p=P(18,158); c.quadraticCurveTo(...P(18,182),p[0],p[1]);            // bottom-left corner
+      p=P(18,62);  c.lineTo(p[0],p[1]);                                   // outer left edge
+      p=P(62,18);  c.quadraticCurveTo(...P(18,18),p[0],p[1]);             // top-left corner
+      c.closePath(); c.fill();
+
+      // single thick wavy line beneath, ~2.5 periods, rounded caps
+      c.strokeStyle=GLYPH; c.lineCap="round"; c.lineJoin="round";
+      c.lineWidth=26*SC;
+      c.beginPath();
+      const steps=64, x0=28, x1=372, ampl=26, cy=236, periods=2.35;
+      for(let i=0;i<=steps;i++){
+        const t=i/steps, px=x0+(x1-x0)*t;
+        const py=cy+Math.sin(t*Math.PI*2*periods)*ampl;
+        const q=P(px,py);
+        i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);
+      }
+      c.stroke();
+    }},
+  { id:"port", name:"Harbour", draw(c,x,y,u){
+      c.strokeStyle=GLYPH; c.lineWidth=u*.15; c.lineCap="round";
+      c.beginPath(); c.arc(x,y-u*.48,u*.15,0,6.283); c.stroke();
+      c.beginPath(); c.moveTo(x,y-u*.32); c.lineTo(x,y+u*.54); c.stroke();
+      c.beginPath(); c.moveTo(x-u*.32,y-u*.14); c.lineTo(x+u*.32,y-u*.14); c.stroke();
+      c.beginPath(); c.moveTo(x-u*.48,y+u*.16); c.quadraticCurveTo(x,y+u*.84,x+u*.48,y+u*.16); c.stroke(); }},
+  { id:"mine", name:"Mine", draw(c,x,y,u){
+      c.strokeStyle=GLYPH; c.lineWidth=u*.16; c.lineCap="round";
+      c.beginPath(); c.moveTo(x-u*.48,y+u*.5); c.lineTo(x+u*.48,y-u*.4); c.stroke();
+      c.beginPath(); c.moveTo(x+u*.48,y+u*.5); c.lineTo(x-u*.48,y-u*.4); c.stroke();
+      c.beginPath(); c.moveTo(x-u*.64,y-u*.28); c.quadraticCurveTo(x-u*.42,y-u*.6,x-u*.16,y-u*.48); c.stroke();
+      c.beginPath(); c.moveTo(x+u*.64,y-u*.28); c.quadraticCurveTo(x+u*.42,y-u*.6,x+u*.16,y-u*.48); c.stroke(); }},
+  { id:"battle", name:"Battle", draw(c,x,y,u){
+      c.strokeStyle=GLYPH; c.lineWidth=u*.13; c.lineCap="round";
+      c.beginPath(); c.moveTo(x-u*.54,y+u*.54); c.lineTo(x+u*.48,y-u*.5); c.stroke();
+      c.beginPath(); c.moveTo(x+u*.54,y+u*.54); c.lineTo(x-u*.48,y-u*.5); c.stroke();
+      c.lineWidth=u*.11;
+      c.beginPath(); c.moveTo(x-u*.6,y+u*.2); c.lineTo(x-u*.18,y+u*.6); c.stroke();
+      c.beginPath(); c.moveTo(x+u*.6,y+u*.2); c.lineTo(x+u*.18,y+u*.6); c.stroke(); }},
+  { id:"mark", name:"Landmark", draw(c,x,y,u){
+      c.fillStyle=GLYPH; c.beginPath();
+      for(let i=0;i<8;i++){
+        const a=-Math.PI/2+i*Math.PI/4, rr=(i%2?u*.24:u*.62);
+        const px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr;
+        i?c.lineTo(px,py):c.moveTo(px,py);
+      }
+      c.closePath(); c.fill(); }}
+];
+const F_BY_ID={}; FEATURES.forEach((f,i)=>{ F_BY_ID[f.id]=i+1; });
+
+/* ══════════════ state ══════════════ */
+const A4_SHORT=210, A4_LONG=297;   // millimetres
+const M=11, HEAD=20;               // page margin, masthead band
+const DPMM_PRINT=300/25.4;         // 300 dpi
+const DPMM_CSS=96/25.4;            // 1 CSS pixel per mm at 100% zoom
+
+const S = {
+  cols:20, rows:14, orient:"pointy",
+  title:"", scale:"",
+  grid:true, coord:true,  notes:true, mono:false, custom:[], paths:[],
+  terr:null, feat:null, labels:{}, memo:{}
+};
+let tool="paint", brush=0, curT="plain", curF="town";
+let sel=null, hover=null, ppmView=DPMM_CSS, autoFit=true, printing=false;
+
+function blank(){
+  S.terr=new Uint8Array(S.cols*S.rows);
+  S.feat=new Uint8Array(S.cols*S.rows);
+  S.labels={}; S.memo={}; S.paths=[]; sel=null;
+}
+blank();
+
+/* ══════════════ page and hex geometry, all in millimetres ══════════════ */
+const SQ3=Math.sqrt(3);
+function pageSize(){ return {w:A4_LONG,h:A4_SHORT}; }
+function factors(){
+  return S.orient==="pointy"
+    ? { fw:SQ3*(S.cols+(S.rows>1?.5:0)), fh:1.5*(S.rows-1)+2 }
+    : { fw:1.5*(S.cols-1)+2, fh:SQ3*(S.rows+(S.cols>1?.5:0)) };
+}
+
+function layout(){
+  const p=pageSize(), availW=p.w-M*2;
+  const availH=p.h-M*2-HEAD;     // band between masthead and bottom margin
+  const f=factors();
+  const s=Math.min(availW/f.fw, availH/f.fh);
+  const gw=s*f.fw, gh=s*f.fh;
+  return { pw:p.w, ph:p.h, s, gw, gh, availW, availH,
+           ox:M+(availW-gw)/2, oy:M+HEAD+(availH-gh)/2 };
+}
+function center(c,r,L){
+  const s=L.s;
+  if(S.orient==="pointy"){
+    const w=SQ3*s;
+    return [L.ox + w*(c+(r&1?.5:0)) + w/2, L.oy + 1.5*s*r + s];
+  }
+  const h=SQ3*s;
+  return [L.ox + 1.5*s*c + s, L.oy + h*(r+(c&1?.5:0)) + h/2];
+}
+function hexPath(c,cx,cy,s){
+  const off=S.orient==="pointy" ? -Math.PI/6 : 0;
+  c.beginPath();
+  for(let i=0;i<6;i++){
+    const a=off+i*Math.PI/3, x=cx+s*Math.cos(a), y=cy+s*Math.sin(a);
+    i?c.lineTo(x,y):c.moveTo(x,y);
+  }
+  c.closePath();
+}
+/* Same hex outline, appended to the current path so several hexes can be
+   combined into one region (used to mask paths away from water tiles). */
+function hexInto(c,cx,cy,s){
+  const off=S.orient==="pointy" ? -Math.PI/6 : 0;
+  for(let i=0;i<6;i++){
+    const a=off+i*Math.PI/3, x=cx+s*Math.cos(a), y=cy+s*Math.sin(a);
+    i?c.lineTo(x,y):c.moveTo(x,y);
+  }
+  c.closePath();
+}
+function idx(c,r){ return r*S.cols+c; }
+function inside(c,r){ return c>=0&&r>=0&&c<S.cols&&r<S.rows; }
+function pick(mx,my,L){
+  const s=L.s; let ra,ca;
+  if(S.orient==="pointy"){
+    const w=SQ3*s;
+    ra=Math.round((my-L.oy-s)/(1.5*s));
+    ca=Math.round((mx-L.ox-w/2-(ra&1?w/2:0))/w);
+  } else {
+    const h=SQ3*s;
+    ca=Math.round((mx-L.ox-s)/(1.5*s));
+    ra=Math.round((my-L.oy-h/2-(ca&1?h/2:0))/h);
+  }
+  let best=null,bd=Infinity;
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    const c=ca+dc, r=ra+dr; if(!inside(c,r)) continue;
+    const [x,y]=center(c,r,L), d=(x-mx)*(x-mx)+(y-my)*(y-my);
+    if(d<bd){ bd=d; best=[c,r]; }
+  }
+  return best && bd<=(s*.98)*(s*.98) ? best : null;
+}
+
+/* Grid coordinates: 1-based, column left-to-right, row top-to-bottom.
+   Returned as a padded 4-character string: first two digits = column (01..),
+   last two digits = row (01..). Always positive, always top-left origin. */
+function gridCoord(c,r){
+  return String(c+1).padStart(2,"0") + String(r+1).padStart(2,"0");
+}
+function cubeOf(c,r){
+  if(S.orient==="pointy"){ const x=c-((r-(r&1))/2); return [x,-x-r,r]; }
+  const z=r-((c-(c&1))/2); return [c,-c-z,z];
+}
+function hexDist(a,b){
+  const A=cubeOf(a[0],a[1]), B=cubeOf(b[0],b[1]);
+  return Math.max(Math.abs(A[0]-B[0]),Math.abs(A[1]-B[1]),Math.abs(A[2]-B[2]));
+}
+function disc(c,r,rad){
+  if(rad===0) return inside(c,r)?[[c,r]]:[];
+  const out=[];
+  const lo=Math.max(0,r-rad*2), hi=Math.min(S.rows-1,r+rad*2);
+  const lc=Math.max(0,c-rad*2), hc=Math.min(S.cols-1,c+rad*2);
+  for(let rr=lo;rr<=hi;rr++) for(let cc=lc;cc<=hc;cc++)
+    if(hexDist([c,r],[cc,rr])<=rad) out.push([cc,rr]);
+  return out;
+}
+/* The hex across edge k, where edge k spans vertices k and k+1.
+   Edge midpoints sit at k*60 degrees (pointy) or 30+k*60 (flat). */
+function edgeNeighbour(c,r,k){
+  let d;
+  if(S.orient==="pointy"){
+    const o=r&1;
+    d=[[1,0],[o?1:0,1],[o?0:-1,1],[-1,0],[o?0:-1,-1],[o?1:0,-1]][k];
+  } else {
+    const o=c&1;
+    d=[[1,o?1:0],[0,1],[-1,o?1:0],[-1,o?0:-1],[0,-1],[1,o?0:-1]][k];
+  }
+  return [c+d[0], r+d[1]];
+}
+function neighbours(c,r){
+  const d = S.orient==="pointy"
+    ? ((r&1) ? [[1,0],[1,-1],[0,-1],[-1,0],[0,1],[1,1]]
+             : [[1,0],[0,-1],[-1,-1],[-1,0],[-1,1],[0,1]])
+    : ((c&1) ? [[0,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]]
+             : [[0,-1],[1,-1],[1,0],[0,1],[-1,0],[-1,-1]]);
+  return d.map(([dc,dr])=>[c+dc,r+dr]).filter(p=>inside(p[0],p[1]));
+}
+
+
+
+/* ══════════════ painting the plate ══════════════ */
+const cv=document.getElementById("plate"), ctx=cv.getContext("2d");
+
+function paint(c,ppm,L){
+  const W=L.pw*ppm, H=L.ph*ppm;
+  c.setTransform(1,0,0,1,0,0);
+  c.fillStyle=PAPER; c.fillRect(0,0,W,H);
+  c.save(); c.scale(ppm,ppm);
+
+  // plate frame
+  c.strokeStyle=PAPERLINE;
+  c.lineWidth=.35; c.strokeRect(5,5,L.pw-10,L.ph-10);
+  c.lineWidth=.12; c.strokeRect(6.8,6.8,L.pw-13.6,L.ph-13.6);
+
+  // masthead: title, hex count beside it, compass needle at the right
+  const titleTxt=S.title||"Untitled plate";
+  c.fillStyle=INK; c.textBaseline="alphabetic"; c.textAlign="left";
+  c.font='600 7.2px "Bodoni Moda", Didot, serif';
+  c.fillText(titleTxt, M, M+8.6);
+  const tw=c.measureText(titleTxt).width;
+  c.fillStyle=META; c.font='500 3px "IBM Plex Mono", monospace';
+  c.fillText(S.cols+"×"+S.rows+" hexes", M+tw+5, M+8.6);
+
+  // compass needle, right-aligned in the masthead band
+  (function(){
+    const r=5.4, cx=L.pw-M-r*1.1, cy=M+HEAD/2;
+    c.fillStyle=INK; c.textAlign="center"; c.textBaseline="alphabetic";
+    c.font='700 '+(r*.68)+'px "Archivo", sans-serif';
+    c.fillText("N", cx, cy-r*1.2);
+    const w=r*.62, base=cy+r*.72, notch=cy+r*.16;
+    c.fillStyle=INK;                              // east half, solid
+    c.beginPath(); c.moveTo(cx,cy-r); c.lineTo(cx+w,base); c.lineTo(cx,notch);
+    c.closePath(); c.fill();
+    c.fillStyle=PAPER;                            // west half, open
+    c.beginPath(); c.moveTo(cx,cy-r); c.lineTo(cx-w,base); c.lineTo(cx,notch);
+    c.closePath(); c.fill();
+    c.strokeStyle=INK; c.lineWidth=r*.055; c.lineJoin="round";
+    c.beginPath(); c.moveTo(cx,cy-r); c.lineTo(cx-w,base); c.lineTo(cx,notch);
+    c.closePath(); c.stroke();
+  })();
+
+  c.strokeStyle=PAPERLINE; c.lineWidth=.18;
+  c.beginPath(); c.moveTo(M,M+16.6); c.lineTo(L.pw-M,M+16.6); c.stroke();
+
+  const s=L.s;
+  SYM_SQUASH = S.coord ? .7 : 1;
+  SYM_SHIFT  = S.coord ? -.14 : 0;
+  // tile bodies: flat fill, then the tile type's symbol.
+  // When a feature sits on a hex, skip the terrain symbol — the feature
+  // is the visual anchor for that cell and the two would overlap.
+  for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+    const i=idx(col,r), t=S.terr[i]; if(!t) continue;
+    const [cx,cy]=center(col,r,L), def=TERRAINS[t-1];
+    c.save(); hexPath(c,cx,cy,s+s*.02); c.clip();
+    c.fillStyle=S.mono?PAPER:def.base; c.fill();
+    if(!S.feat[i]) def.draw(c,cx,cy,s,def);
+    c.restore();
+  }
+  // outlines
+  if(S.grid){
+    // Each shared edge belongs to two hexes. Stroking every hex's whole
+    // outline paints interior edges twice and boundary edges once, which
+    // makes the outer border visibly paler. Walk unique edges instead and
+    // stroke them all in one pass, so every border has identical weight.
+    c.strokeStyle="rgba(46,36,24,.72)"; c.lineWidth=s*.026;
+    c.lineJoin="round"; c.lineCap="butt";
+    const off=S.orient==="pointy" ? -Math.PI/6 : 0;
+    c.beginPath();
+    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      const [cx,cy]=center(col,r,L), me=idx(col,r);
+      for(let k=0;k<6;k++){
+        const nb=edgeNeighbour(col,r,k);
+        // the lower-indexed hex of a pair owns the shared edge
+        if(inside(nb[0],nb[1]) && idx(nb[0],nb[1])<me) continue;
+        const a1=off+k*Math.PI/3, a2=off+(k+1)*Math.PI/3;
+        c.moveTo(cx+s*Math.cos(a1), cy+s*Math.sin(a1));
+        c.lineTo(cx+s*Math.cos(a2), cy+s*Math.sin(a2));
+      }
+    }
+    c.stroke();
+  }
+  // ── Paths: roads and rivers — Catmull-Rom spline for soft turns ─────────
+  /* Draw a smooth curve through all hex centres using Catmull-Rom splines
+     converted to cubic Bézier segments. This gives a natural river/road
+     bend when the path changes direction between hexes. */
+  function strokeSpline(c2,pts){
+    if(pts.length<2) return;
+    if(pts.length===2){ c2.moveTo(pts[0][0],pts[0][1]); c2.lineTo(pts[1][0],pts[1][1]); return; }
+    c2.moveTo(pts[0][0],pts[0][1]);
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
+      // Chord length between p1 and p2 — control points must not exceed this
+      const dx12=p2[0]-p1[0], dy12=p2[1]-p1[1];
+      const chord=Math.sqrt(dx12*dx12+dy12*dy12)||1;
+      // Catmull-Rom tangent vectors, scaled by a gentle tension
+      const t=0.18;
+      let cp1x=p1[0]+(p2[0]-p0[0])*t, cp1y=p1[1]+(p2[1]-p0[1])*t;
+      let cp2x=p2[0]-(p3[0]-p1[0])*t, cp2y=p2[1]-(p3[1]-p1[1])*t;
+      // Clamp each control point so it can't be pulled more than half a chord
+      // length away from its anchor — this keeps curves inside the hex
+      const maxPull=chord*0.42;
+      const d1=Math.sqrt((cp1x-p1[0])**2+(cp1y-p1[1])**2)||1;
+      const d2=Math.sqrt((cp2x-p2[0])**2+(cp2y-p2[1])**2)||1;
+      if(d1>maxPull){ cp1x=p1[0]+(cp1x-p1[0])/d1*maxPull; cp1y=p1[1]+(cp1y-p1[1])/d1*maxPull; }
+      if(d2>maxPull){ cp2x=p2[0]+(cp2x-p2[0])/d2*maxPull; cp2y=p2[1]+(cp2y-p2[1])/d2*maxPull; }
+      c2.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2[0],p2[1]);
+    }
+  }
+  if(S.paths && S.paths.length){
+    /* Paths sit above the tiles, but must not run across open water: clip to
+       the whole sheet minus every sea/lake hex, so a river meeting the coast
+       stops at the shoreline instead of drawing over it. */
+    c.save();
+    c.beginPath();
+    c.rect(0,0,L.pw,L.ph);
+    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      const t=S.terr[idx(col,r)]; if(!t) continue;
+      const id=TERRAINS[t-1].id;
+      if(id!=="sea" && id!=="lake") continue;
+      const [wx,wy]=center(col,r,L);
+      hexInto(c,wx,wy,s+s*.02);
+    }
+    c.clip("evenodd");
+
+    // Group rivers and draw them all in one compound stroke pass so their
+    // thick outlines blend at junctions instead of double-painting.
+    const rivers=S.paths.filter(p=>p.type==="river" && p.hexes.length>=2);
+    const nonRivers=S.paths.filter(p=>p.type!=="river" && p.hexes.length>=2);
+
+    if(rivers.length){
+      if(!S.mono){
+        c.lineCap="round"; c.lineJoin="round";
+        c.strokeStyle="#3D9BC7"; c.lineWidth=s*.10;
+        c.beginPath();
+        rivers.forEach(path=>{
+          const pts=path.hexes.map(h=>center(h[0],h[1],L));
+          strokeSpline(c,pts);
+        });
+        c.stroke();
+      } else {
+        // Mono: twin parallel lines + cross-hatching for each river
+        rivers.forEach(path=>{
+          const pts=path.hexes.map(h=>center(h[0],h[1],L));
+          c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK;
+          const off=s*.1;
+          for(const side of [-1,1]){
+            c.lineWidth=s*.042; c.beginPath();
+            pts.forEach(([px,py],i)=>{
+              const n=i<pts.length-1?i+1:i-1;
+              const dx=pts[n][0]-px, dy=pts[n][1]-py, len=Math.sqrt(dx*dx+dy*dy)||1;
+              const ox=-dy/len*off*side, oy=dx/len*off*side;
+              i?c.lineTo(px+ox,py+oy):c.moveTo(px+ox,py+oy);
+            }); c.stroke();
+          }
+          c.lineWidth=s*.028; c.lineCap="butt";
+          for(let n=0;n<pts.length-1;n++){
+            const [x1,y1]=pts[n],[x2,y2]=pts[n+1];
+            const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy)||1;
+            const segs=Math.max(2,Math.round(len/s));
+            for(let k=1;k<segs;k++){
+              const t2=k/segs,mx=x1+dx*t2,my=y1+dy*t2;
+              const nx=-dy/len*off*.85,ny=dx/len*off*.85;
+              c.beginPath(); c.moveTo(mx-nx,my-ny); c.lineTo(mx+nx,my+ny); c.stroke();
+            }
+          }
+        });
+      }
+    }
+
+    nonRivers.forEach(path=>{
+      const pts=path.hexes.map(h=>center(h[0],h[1],L));
+      if(path.type==="trail"){
+        c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK; c.lineWidth=s*.04;
+        c.setLineDash([s*.22,s*.14,s*.10,s*.18,s*.06,s*.16]);
+        c.beginPath(); strokeSpline(c,pts); c.stroke();
+        c.setLineDash([]);
+      } else {
+        c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK; c.lineWidth=s*.07;
+        c.beginPath(); strokeSpline(c,pts); c.stroke();
+      }
+    });
+    c.restore();   // release the water mask
+  }
+
+  // note marks, top of the hex
+  if(S.notes){
+    for(const k in S.memo){
+      if(!S.memo[k]) continue;
+      const i=+k, col=i%S.cols, r=(i-col)/S.cols; if(!inside(col,r)) continue;
+      const [cx,cy]=center(col,r,L), t=S.terr[i];
+      const col2 = S.mono ? INK : (t ? TERRAINS[t-1].ink : PAPER_INK);
+      const px=cx+s*.44, py=cy-s*(S.orient==="pointy"?.5:.42);
+      c.strokeStyle=col2; c.lineWidth=s*.05;
+      c.beginPath(); c.arc(px,py,s*.115,0,6.283); c.stroke();
+      c.fillStyle=col2; c.beginPath(); c.arc(px,py,s*.045,0,6.283); c.fill();
+    }
+  }
+  // place names no longer drawn on the map
+  // doubled coordinates along the bottom of each hex
+  if(S.coord){
+    c.textAlign="center"; c.textBaseline="middle";
+    c.font='600 '+(s*.32)+'px "IBM Plex Mono", monospace';
+    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      const i=idx(col,r), t=S.terr[i];
+      const [cx,cy]=center(col,r,L);
+      c.fillStyle = S.mono ? DARK_TEXT : (t ? TERRAINS[t-1].ink : PAPER_INK);
+      c.fillText(gridCoord(col,r), cx, cy + s*(S.orient==="pointy"?.53:.56));
+    }
+  }
+  SYM_SQUASH=1; SYM_SHIFT=0;
+
+  // features: tile-coloured background disc first (covers any path underneath),
+  // then the icon on top in the appropriate contrast ink.
+  for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+    const i=idx(col,r), f=S.feat[i]; if(!f) continue;
+    const [cx,cy]=center(col,r,L), u=s*.4, t=S.terr[i];
+    const fy=cy;
+    // Background disc — tile colour in colour mode, paper in mono
+    const bgCol = S.mono ? PAPER : (t ? TERRAINS[t-1].base : PAPER);
+    c.fillStyle=bgCol;
+    c.beginPath(); c.arc(cx,fy,u*.92,0,6.283); c.fill();
+    GLYPH    = S.mono ? INK : (t ? TERRAINS[t-1].ink : PAPER_INK);
+    GLYPH_BG = bgCol;
+    c.save(); FEATURES[f-1].draw(c,cx,fy,u); c.restore();
+  }
+  GLYPH=INK; GLYPH_BG=PAPER;
+  c.restore();
+}
+
+/* the plate is painted into a buffer; cursor motion only recomposites it */
+let baseCv=null, baseCtx=null, dirty=true;
+function refresh(){ dirty=true; draw(); }
+
+function draw(){
+  const L=layout();
+  let ppm = printing ? DPMM_PRINT : ppmView*Math.min(2,window.devicePixelRatio||1);
+  while(L.pw*ppm*L.ph*ppm>14e6 && ppm>1) ppm-=.4;
+  const W=Math.round(L.pw*ppm), H=Math.round(L.ph*ppm);
+  if(!baseCv){ baseCv=document.createElement("canvas"); baseCtx=baseCv.getContext("2d"); }
+  if(cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; baseCv.width=W; baseCv.height=H; dirty=true; }
+  // only the width is set, so the sheet always keeps its A4 proportions
+  cv.style.width=(L.pw*ppmView)+"px";
+  document.documentElement.style.setProperty("--pw",L.pw+"mm");
+  document.documentElement.style.setProperty("--ph",L.ph+"mm");
+  if(dirty){ paint(baseCtx,ppm,L); dirty=false; }
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.drawImage(baseCv,0,0);
+
+  // cursor and selection live on screen only, never on the printed plate
+  ctx.save(); ctx.scale(ppm,ppm);
+  if(sel!==null){
+    const col=sel%S.cols, r=(sel-col)/S.cols;
+    if(inside(col,r)){
+      const [x,y]=center(col,r,L);
+      ctx.strokeStyle="rgba(216,172,62,.95)"; ctx.lineWidth=L.s*.075;
+      hexPath(ctx,x,y,L.s*.96); ctx.stroke();
+    }
+  }
+  // preview of the path being drawn right now
+  if(activePath && activePath.hexes.length){
+    const pts=activePath.hexes.map(h=>center(h[0],h[1],L));
+    if(hover) pts.push(center(hover[0],hover[1],L));
+    const col=activePath.type==="river" ? "#3D9BC7" : INK; // road and trail both preview in INK
+    ctx.strokeStyle=col; ctx.lineWidth=L.s*.12; ctx.lineCap="round"; ctx.lineJoin="round";
+    ctx.beginPath(); pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py)); ctx.stroke();
+  }
+  // erasepath highlight: tint paths that pass through the hovered hex
+  if(tool==="erasepath" && pathEraseHover){
+    const [hx,hy]=center(pathEraseHover[0],pathEraseHover[1],L);
+    const doomed=(S.paths||[]).filter(p=>p.hexes.some(h=>h[0]===pathEraseHover[0]&&h[1]===pathEraseHover[1]));
+    doomed.forEach(path=>{
+      const pts=path.hexes.map(h=>center(h[0],h[1],L));
+      ctx.save();
+      ctx.strokeStyle="rgba(220,60,40,.9)"; ctx.lineWidth=L.s*.28;
+      ctx.lineCap="round"; ctx.lineJoin="round";
+      ctx.beginPath(); pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py)); ctx.stroke();
+      ctx.restore();
+    });
+    // X marker on the hovered hex
+    const r=L.s*.28;
+    ctx.strokeStyle="rgba(220,60,40,.95)"; ctx.lineWidth=L.s*.09; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(hx-r,hy-r); ctx.lineTo(hx+r,hy+r); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hx+r,hy-r); ctx.lineTo(hx-r,hy+r); ctx.stroke();
+  }
+  if(hover && tool!=="fill"){
+    const cells=(tool==="paint"||tool==="erase") ? disc(hover[0],hover[1],brush) : [hover];
+    ctx.strokeStyle = tool==="erase" ? "rgba(190,70,50,.95)"
+                    : tool==="inspect" ? "rgba(69,196,222,.95)" : "rgba(20,40,52,.9)";
+    ctx.lineWidth=L.s*.055;
+    cells.forEach(([c0,r0])=>{ const [x,y]=center(c0,r0,L); hexPath(ctx,x,y,L.s*.94); ctx.stroke(); });
+  }
+  ctx.restore();
+  showFit(L);
+}
+
+/* ══════════════ zoom ══════════════ */
+const ZMIN=DPMM_CSS*.35, ZMAX=DPMM_CSS*3;
+function fitPpm(){
+  const st=document.getElementById("stage"), L=layout();
+  const w=(st&&st.clientWidth)||960, h=(st&&st.clientHeight)||700;
+  return Math.max(ZMIN, Math.min(ZMAX, Math.min((w-44)/L.pw, (h-44)/L.ph)));
+}
+function showZoom(){
+  document.getElementById("zoomOut").value=Math.round(ppmView/DPMM_CSS*100)+"%";
+}
+function setZoom(v,manual){
+  ppmView=Math.max(ZMIN,Math.min(ZMAX,v));
+  if(manual) autoFit=false;
+  showZoom(); refresh();
+}
+function doFit(){ autoFit=true; ppmView=fitPpm(); showZoom(); refresh(); }
+window.addEventListener("resize",()=>{ if(autoFit) ppmView=fitPpm(); showZoom(); refresh(); });
+
+/* ══════════════ history ══════════════ */
+const past=[], future=[];
+function snap(){ return { t:S.terr.slice(), f:S.feat.slice(),
+  l:JSON.stringify(S.labels), m:JSON.stringify(S.memo), c:S.cols, r:S.rows,
+  p:JSON.stringify(S.paths||[]) }; }
+function push(){ past.push(snap()); if(past.length>50) past.shift(); future.length=0; buttons(); }
+function restore(x){
+  S.cols=x.c; S.rows=x.r;
+  S.terr=x.t.slice(); S.feat=x.f.slice();
+  S.labels=JSON.parse(x.l); S.memo=JSON.parse(x.m);
+  S.paths=x.p ? JSON.parse(x.p) : [];
+  colsI.value=colsO.value=S.cols; rowsI.value=rowsO.value=S.rows;
+  if(sel!==null && sel>=S.cols*S.rows) sel=null;
+  syncInspector();
+}
+function undo(){ if(!past.length) return; future.push(snap()); restore(past.pop()); buttons(); refresh(); store(); }
+function redo(){ if(!future.length) return; past.push(snap()); restore(future.pop()); buttons(); refresh(); store(); }
+function buttons(){
+  document.getElementById("undo").disabled=!past.length;
+  document.getElementById("redo").disabled=!future.length;
+}
+
+/* ══════════════ edits ══════════════ */
+function apply(c,r,erase){
+  const cells=(tool==="paint"||tool==="erase"||erase) ? disc(c,r,brush) : [[c,r]];
+  let changed=false;
+  if(erase||tool==="erase"){
+    cells.forEach(([cc,rr])=>{ const i=idx(cc,rr);
+      if(S.terr[i]||S.feat[i]||S.labels[i]||S.memo[i]) changed=true;
+      S.terr[i]=0; S.feat[i]=0; delete S.labels[i]; delete S.memo[i];
+    });
+  } else if(tool==="paint"){
+    const v=T_BY_ID[curT];
+    cells.forEach(([cc,rr])=>{ const i=idx(cc,rr); if(S.terr[i]!==v){ S.terr[i]=v; changed=true; } });
+  } else if(tool==="feature"){
+    const i=idx(c,r), v=F_BY_ID[curF];
+    S.feat[i] = S.feat[i]===v ? 0 : v; changed=true;
+  } else if(tool==="fill"){
+    changed=flood(c,r);
+  }
+  return changed;
+}
+function flood(c,r){
+  const from=S.terr[idx(c,r)], to=T_BY_ID[curT];
+  if(from===to) return false;
+  const st=[[c,r]], seen=new Set([idx(c,r)]);
+  while(st.length){
+    const [cc,rr]=st.pop(); S.terr[idx(cc,rr)]=to;
+    neighbours(cc,rr).forEach(([nc,nr])=>{
+      const ni=idx(nc,nr);
+      if(!seen.has(ni)&&S.terr[ni]===from){ seen.add(ni); st.push([nc,nr]); }
+    });
+  }
+  return true;
+}
+
+/* ══════════════ pointer ══════════════ */
+let drawing=false, lastCell=null, erasing=false;
+function toSheet(ev){
+  const rect=cv.getBoundingClientRect(), L=layout();
+  return [ (ev.clientX-rect.left)/rect.width*L.pw,
+           (ev.clientY-rect.top)/rect.height*L.ph, L ];
+}
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("pointerdown",e=>{
+  const [mx,my,L]=toSheet(e), cell=pick(mx,my,L); if(!cell) return;
+  erasing = e.button===2 || e.shiftKey;
+  if(tool==="inspect" && !erasing){
+    sel=idx(cell[0],cell[1]); openInspector(); draw(); return;
+  }
+  cv.setPointerCapture(e.pointerId);
+  drawing=true; lastCell=cell.join(); push();
+  if(!apply(cell[0],cell[1],erasing)) past.pop();
+  buttons(); hover=cell;
+  if(sel===idx(cell[0],cell[1])) syncInspector();
+  refresh(); store();
+});
+cv.addEventListener("pointermove",e=>{
+  const [mx,my,L]=toSheet(e), cell=pick(mx,my,L);
+  const key=cell?cell.join():null;
+  if(drawing&&cell&&key!==lastCell){
+    lastCell=key; apply(cell[0],cell[1],erasing); hover=cell;
+    if(sel===idx(cell[0],cell[1])) syncInspector();
+    refresh(); store(); return;
+  }
+  if(key!==(hover?hover.join():null)){ hover=cell; draw(); }
+  readout(cell);
+});
+window.addEventListener("pointerup",()=>{ drawing=false; lastCell=null; });
+cv.addEventListener("pointerleave",()=>{ hover=null; pathEraseHover=null; draw(); readout(null); });
+
+/* ══════════════ path drawing (roads & rivers) ══════════════
+   Each path is a sequence of hex grid positions. Dragging through hexes
+   extends the active path; right-click removes any path segment passing
+   through the clicked hex. */
+let activePath=null;  // {type,hexes:[]} being drawn right now
+let pathEraseHover=null;  // hex under cursor when erasepath is active
+
+function pathKey(c,r){ return c+","+r; }
+
+function startPath(type,col,r){
+  activePath={type,hexes:[[col,r]]};
+}
+function extendPath(col,r){
+  if(!activePath) return;
+  const last=activePath.hexes[activePath.hexes.length-1];
+  if(last[0]===col && last[1]===r) return;   // same hex, skip
+  activePath.hexes.push([col,r]);
+}
+function hexEq(a,b){ return a[0]===b[0]&&a[1]===b[1]; }
+function commitPath(){
+  if(!activePath) return;
+  if(activePath.hexes.length>=2){
+    push();
+    const type=activePath.type;
+    const hexes=activePath.hexes.slice();
+    const head=hexes[0], tail=hexes[hexes.length-1];
+    // look for an existing same-type path that shares an endpoint
+    let merged=false;
+    for(let i=0;i<S.paths.length;i++){
+      const p=S.paths[i];
+      if(p.type!==type) continue;
+      const ph=p.hexes[0], pt=p.hexes[p.hexes.length-1];
+      if(hexEq(head,pt)){
+        // new path extends an existing path's tail → append
+        p.hexes=p.hexes.concat(hexes.slice(1));
+        merged=true; break;
+      } else if(hexEq(tail,ph)){
+        // new path feeds into an existing path's head → prepend
+        p.hexes=hexes.concat(p.hexes.slice(1));
+        merged=true; break;
+      } else if(hexEq(tail,pt)){
+        // new path connects to tail reversed → reverse-append
+        p.hexes=p.hexes.concat(hexes.slice(0,-1).reverse());
+        merged=true; break;
+      } else if(hexEq(head,ph)){
+        // new path connects to head reversed → reverse-prepend
+        p.hexes=hexes.slice(1).reverse().concat(p.hexes);
+        merged=true; break;
+      }
+    }
+    if(!merged) S.paths.push({type, hexes});
+    store();
+  }
+  activePath=null;
+}
+function erasePathsAt(col,r){
+  S.paths=S.paths.filter(p=>!p.hexes.some(h=>h[0]===col&&h[1]===r));
+}
+
+// Override pointerdown/pointermove/pointerup for road/river tools
+const _origDown=cv.onpointerdown||null;
+
+cv.addEventListener("pointerdown",e=>{
+  if(tool!=="road"&&tool!=="river"&&tool!=="trail"&&tool!=="erasepath") return;
+  const [mx,my,L]=toSheet(e);
+  const cell=pick(mx,my,L); if(!cell) return;
+  if(e.button===2||e.shiftKey){ push(); erasePathsAt(cell[0],cell[1]); store(); refresh(); return; }
+  if(tool==="erasepath") return; // erase happens on pointerup (click), not here
+  cv.setPointerCapture(e.pointerId);
+  startPath(tool,cell[0],cell[1]);
+  hover=cell; draw();
+},{capture:false});
+
+cv.addEventListener("pointermove",e=>{
+  if(tool!=="road"&&tool!=="river"&&tool!=="trail"&&tool!=="erasepath") return;
+  const [mx,my,L]=toSheet(e);
+  let cell=pick(mx,my,L);
+  if(tool==="erasepath"){
+    pathEraseHover=cell||null;
+    if(cell) hover=cell;
+    draw(); return;
+  }
+  // If dragging a path outside the grid, snap to the nearest valid hex on
+  // the boundary so the path continues off-edge instead of freezing.
+  if(!cell && activePath){
+    let best=null, bd=Infinity;
+    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      const [cx,cy]=center(col,r,L);
+      const d=(cx-mx)*(cx-mx)+(cy-my)*(cy-my);
+      if(d<bd){ bd=d; best=[col,r]; }
+    }
+    cell=best;
+  }
+  if(cell){ hover=cell; if(activePath) extendPath(cell[0],cell[1]); }
+  refresh();
+},{capture:false});
+
+window.addEventListener("pointerup",e=>{
+  if(tool==="erasepath" && pathEraseHover){
+    push(); erasePathsAt(pathEraseHover[0],pathEraseHover[1]); store(); refresh(); return;
+  }
+  if(activePath){ commitPath(); refresh(); }
+},{capture:false});
+
+/* ══════════════ hex inspector ══════════════ */
+const insp=document.getElementById("insp");
+const iName=document.getElementById("iName"), iNote=document.getElementById("iNote");
+
+function openInspector(){ insp.classList.add("on"); syncInspector(); }
+function closeInspector(){
+  if(!insp.classList.contains("on")) return;
+  insp.classList.remove("on"); sel=null; draw();
+}
+function syncInspector(){
+  if(sel===null||!insp.classList.contains("on")) return;
+  const col=sel%S.cols, r=(sel-col)/S.cols;
+  if(!inside(col,r)){ closeInspector(); return; }
+  document.getElementById("iCoord").textContent=gridCoord(col,r);
+  const t=S.terr[sel], f=S.feat[sel];
+  const tName=t?TERRAINS[t-1].name:"—", fName=f?FEATURES[f-1].name:"—";
+  document.getElementById("iOff").textContent=tName+"  ·  "+fName;
+  if(document.activeElement!==iName) iName.value=S.labels[sel]||"";
+  if(document.activeElement!==iNote) iNote.value=S.memo[sel]||"";
+  const btn=document.getElementById("iSave");
+  if(btn){ btn.textContent="Save"; btn.style.background=""; btn.style.borderColor=""; }
+}
+document.getElementById("iClose").onclick=closeInspector;
+insp.addEventListener("pointerdown",e=>{ if(e.target===insp) closeInspector(); });
+
+// Save button: commit fields, show confirmation
+document.getElementById("iSave").onclick=()=>{
+  if(sel===null) return;
+  push();
+  const nm=iName.value.trim();
+  if(nm) S.labels[sel]=nm; else delete S.labels[sel];
+  const nt=iNote.value;
+  if(nt.trim()) S.memo[sel]=nt; else delete S.memo[sel];
+  store();
+  refresh();          // note marks may have appeared or gone
+  closeInspector();
+};
+
+document.getElementById("iWipe").onclick=()=>{
+  if(sel===null) return;
+  push(); delete S.labels[sel]; delete S.memo[sel];
+  syncInspector(); store(); refresh();
+};
+
+/* ══════════════ readouts ══════════════ */
+function readout(cell){
+  const el=document.getElementById("readout");
+  if(!cell){ el.innerHTML="<b>—</b>"; return; }
+  const i=idx(cell[0],cell[1]), t=S.terr[i], f=S.feat[i], gc=gridCoord(cell[0],cell[1]);
+  el.innerHTML="<b>"+gc+"</b>"
+    +"  ·  "+(t?TERRAINS[t-1].name:"unsurveyed")
+    +(f?"  ·  "+FEATURES[f-1].name:"")
+    +(S.labels[i]?"  ·  “"+S.labels[i]+"”":"")
+    +(S.memo[i]?"  ·  noted":"");
+}
+function showFit(L){
+  document.getElementById("fitNote").textContent=
+    "A4 landscape · hex "+(L.s*2).toFixed(1)+"mm tall "+(L.s*SQ3).toFixed(1)+"mm wide";
+}
+
+/* ══════════════ rail ══════════════ */
+/* Feature is not listed here: picking a feature swatch switches to it. */
+const TOOLS=[
+  {id:"paint",   name:"Paint",   svg:'<path d="M3 13l8-8 4 4-8 8H3z"/><path d="M11 3l2 2"/>'},
+  {id:"fill",    name:"Fill",    svg:'<path d="M2 9l7-7 5 5-7 7z"/><path d="M12 12c2 2 2 3 0 3s-2-1 0-3z"/>'},
+  {id:"road",    name:"Road",    svg:'<path fill="none" stroke-linecap="round" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
+  {id:"trail",   name:"Trail",   svg:'<path fill="none" stroke-linecap="round" stroke-dasharray="3 2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
+  {id:"river",   name:"River",   svg:'<path fill="none" stroke-linecap="round" stroke-width="2" d="M2 13 C5 10 9 7 14 3"/>'},
+  {id:"inspect", name:"Inspect", svg:'<path d="M3.2 1.9l9.2 6.1-4.8.6 2.5 4.1-1.7.9-2.5-4.2-2.7 2.7z"/>'},
+  {id:"erasepath",name:"Erase path",svg:'<path fill="none" stroke-linecap="round" d="M2 13 Q5 9 8 8 Q11 7 14 3"/><line x1="12" y1="12" x2="16" y2="8" stroke-width="2.5"/><line x1="16" y1="12" x2="12" y2="8" stroke-width="2.5"/>'},
+  {id:"erase",   name:"Erase tile",svg:'<path d="M4 12h9"/><path d="M6 10l4-6 3 2-4 6H7z"/>'}
+];
+const HINTS={
+  paint:"Drag to paint · right-click erases",
+  fill:"Click to flood every connected matching tile",
+  feature:"Click a hex to place the feature · click again to remove",
+  erase:"Drag to erase tiles, features and notes",
+  road:"Click or drag through hexes to draw a road · right-click to erase",
+  trail:"Click or drag through hexes to draw a trail · right-click to erase",
+  river:"Click or drag through hexes to draw a river · right-click to erase",
+  erasepath:"Hover a path to highlight it · click to erase it",
+  inspect:"Click any hex to read and edit its record"
+};
+const toolBox=document.getElementById("tools");
+function setTool(id){
+  tool=id;
+  [...toolBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",TOOLS[n].id===tool));
+  document.getElementById("brushRow").style.display=(tool==="paint"||tool==="erase")?"":"none";
+  document.getElementById("hint").textContent=HINTS[tool];
+  if(tool!=="inspect") closeInspector(); else draw();
+}
+TOOLS.forEach(t=>{
+  const b=document.createElement("button");
+  b.className="tool"; b.type="button"; b.setAttribute("aria-pressed",t.id===tool);
+  b.innerHTML='<svg viewBox="0 0 16 16" stroke-linecap="round" stroke-linejoin="round">'
+    +t.svg+'</svg><span>'+t.name+'</span>';
+  b.onclick=()=>setTool(t.id);
+  toolBox.appendChild(b);
+});
+
+function chip(w,h,fn){
+  const el=document.createElement("canvas");
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  el.width=w*dpr; el.height=h*dpr; el.style.aspectRatio=w+"/"+h;
+  const c=el.getContext("2d"); c.scale(dpr,dpr); fn(c,w,h);
+  return el;
+}
+const terrBox=document.getElementById("terrains");
+function paintChip(t){
+  return chip(62,44,(c,w,h)=>{
+    c.fillStyle=PAPER; c.fillRect(0,0,w,h);
+    const s=20, cx=w/2, cy=h/2;
+    const off=S.orient==="pointy" ? -Math.PI/6 : 0;
+    c.save(); c.beginPath();
+    for(let i=0;i<6;i++){ const a=off+i*Math.PI/3;
+      const x=cx+s*Math.cos(a), y=cy+s*Math.sin(a); i?c.lineTo(x,y):c.moveTo(x,y); }
+    c.closePath(); c.clip();
+    SYM_SQUASH=1; SYM_SHIFT=0;
+    c.fillStyle=t.base; c.fill(); t.draw(c,cx,cy,s,t);
+    c.restore();
+  });
+}
+function buildTileSwatches(){
+  terrBox.innerHTML="";
+  TERRAINS.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="swatch"; b.type="button"; b.title=t.name;
+    b.setAttribute("aria-pressed",t.id===curT);
+    b.appendChild(paintChip(t));
+    const sp=document.createElement("span"); sp.textContent=t.name; b.appendChild(sp);
+    if(t.custom){
+      const del=document.createElement("button");
+      del.className="del"; del.type="button"; del.textContent="\u00d7";
+      del.title="Remove this tile";
+      del.onclick=e=>{ e.stopPropagation(); deleteCustom(t.id); };
+      b.appendChild(del);
+    }
+    b.onclick=()=>{
+      curT=t.id;
+      [...terrBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",TERRAINS[n].id===curT));
+      [...featBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
+      if(tool!=="paint") setTool("paint");
+    };
+    terrBox.appendChild(b);
+  });
+}
+buildTileSwatches();
+function redrawChips(){
+  TERRAINS.forEach((t,n)=>{
+    const b=terrBox.children[n]; if(!b) return;
+    b.replaceChild(paintChip(t), b.firstChild);
+  });
+}
+const featBox=document.getElementById("features");
+FEATURES.forEach(f=>{
+  const b=document.createElement("button");
+  b.className="swatch"; b.type="button"; b.title=f.name;
+  b.setAttribute("aria-pressed",f.id===curF);
+  b.appendChild(chip(62,40,(c,w,h)=>{
+    c.fillStyle=PAPER; c.fillRect(0,0,w,h);
+    GLYPH=INK; GLYPH_BG=PAPER; f.draw(c,w/2,h/2,13);
+  }));
+  const sp=document.createElement("span"); sp.textContent=f.name; b.appendChild(sp);
+  b.onclick=()=>{
+    curF=f.id;
+    [...terrBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
+    [...featBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",FEATURES[n].id===curF));
+    setTool("feature");
+    document.getElementById("hint").textContent=
+      "Click a hex to place "+f.name+" · click again to remove";
+  };
+  featBox.appendChild(b);
+});
+
+const brushI=document.getElementById("brush"), brushO=document.getElementById("brushOut");
+brushI.oninput=()=>{ brush=+brushI.value; brushO.value=[1,7,19][brush]+" hex"+(brush?"es":""); draw(); };
+
+const colsI=document.getElementById("cols"), rowsI=document.getElementById("rows"),
+      colsO=document.getElementById("colsOut"), rowsO=document.getElementById("rowsOut");
+function resize(nc,nr){
+  const t=new Uint8Array(nc*nr), f=new Uint8Array(nc*nr), l={}, m={};
+  for(let r=0;r<Math.min(nr,S.rows);r++) for(let c=0;c<Math.min(nc,S.cols);c++){
+    t[r*nc+c]=S.terr[r*S.cols+c]; f[r*nc+c]=S.feat[r*S.cols+c];
+    const a=S.labels[r*S.cols+c]; if(a) l[r*nc+c]=a;
+    const b=S.memo[r*S.cols+c];   if(b) m[r*nc+c]=b;
+  }
+  S.cols=nc; S.rows=nr; S.terr=t; S.feat=f; S.labels=l; S.memo=m;
+  if(sel!==null&&sel>=nc*nr) sel=null;
+  syncInspector();
+}
+colsI.oninput=()=>{ colsO.value=colsI.value; push(); resize(+colsI.value,S.rows); refresh(); store(); };
+rowsI.oninput=()=>{ rowsO.value=rowsI.value; push(); resize(S.cols,+rowsI.value); refresh(); store(); };
+
+function setOrient(o){
+  S.orient="pointy";
+  redrawChips();
+}
+
+document.getElementById("title").oninput=e=>{ S.title=e.target.value; refresh(); store(); };
+(function(){
+  const adj=["Ashen","Crimson","Iron","Silent","Hollow","Sunken","Broken","Grey",
+              "Ancient","Blighted","Faded","Bitter","Wandering","Forsaken","Dark",
+              "Scarred","Lost","Pale","Storm","Ember"];
+  const noun=["Reach","Vale","Moor","Crossing","Expanse","Waste","Fen","Marches",
+               "Shore","Downs","Pass","Hold","Hollow","Basin","Reach","Heath",
+               "Strand","Peaks","Crown","Gate"];
+  const prefix=["The ","The ","","","The ",""];
+  document.getElementById("randTitle").onclick=()=>{
+    const pick=a=>a[Math.floor(Math.random()*a.length)];
+    const t=pick(prefix)+pick(adj)+" "+pick(noun);
+    document.getElementById("title").value=t;
+    S.title=t; refresh(); store();
+  };
+})();
+
+
+document.getElementById("zIn").onclick=()=>setZoom(ppmView*1.25,true);
+document.getElementById("zOut").onclick=()=>setZoom(ppmView/1.25,true);
+document.getElementById("zFit").onclick=doFit;
+
+const SHOW=[["cGrid","grid"],["cCoord","coord"],["cNotes","notes"],["cMono","mono"]];
+SHOW.forEach(([id,k])=>{
+  const el=document.getElementById(id);
+  el.onchange=()=>{ S[k]=el.checked; refresh(); store(); };
+});
+
+document.getElementById("clear").onclick=()=>{ push(); blank(); closeInspector(); refresh(); store(); };
+document.getElementById("undo").onclick=undo;
+document.getElementById("redo").onclick=redo;
+
+/* ══════════════ export, print, files ══════════════ */
+function slug(){
+  return (S.title||"hex-plate").toLowerCase().replace(/[^a-z0-9]+/g,"-")
+         .replace(/^-|-$/g,"")||"hex-plate";
+}
+function dl(href,name){ const a=document.createElement("a"); a.href=href; a.download=name; a.click(); }
+document.getElementById("png").onclick=()=>{
+  const L=layout();
+  const off=document.createElement("canvas");
+  off.width=Math.round(L.pw*DPMM_PRINT); off.height=Math.round(L.ph*DPMM_PRINT);
+  paint(off.getContext("2d"),DPMM_PRINT,L);
+  dl(off.toDataURL("image/png"), slug()+"-a4-300dpi.png");
+};
+document.getElementById("print").onclick=()=>window.print();
+window.addEventListener("beforeprint",()=>{ printing=true; refresh(); });
+window.addEventListener("afterprint",()=>{ printing=false; refresh(); });
+
+function serialise(){
+  return JSON.stringify({
+    v:8, cols:S.cols, rows:S.rows,
+    title:S.title,
+    show:{grid:S.grid,coord:S.coord,notes:S.notes,mono:S.mono},
+    custom:S.custom, paths:(S.paths||[]),
+    tiles:TERRAINS.map(t=>t.id), feats:FEATURES.map(f=>f.id),
+    terr:Array.from(S.terr), feat:Array.from(S.feat), labels:S.labels, memo:S.memo
+  });
+}
+function hydrate(d){
+  if(!d||!d.cols) throw new Error("not a hex plate");
+  S.cols=Math.max(4,Math.min(40,d.cols|0));
+  S.rows=Math.max(4,Math.min(40,d.rows|0));
+  S.title=d.title||"";
+  S.custom=Array.isArray(d.custom) ? d.custom.filter(t=>t&&t.id&&t.base).slice(0,30) : [];
+  S.paths=Array.isArray(d.paths) ? d.paths.filter(p=>p&&p.hexes&&p.hexes.length>=2) : [];
+  rebuildTiles();
+  const n=S.cols*S.rows;
+  S.terr=new Uint8Array(n); S.feat=new Uint8Array(n); S.labels={}; S.memo={};
+  // remap through the saved id lists, so older plates survive list changes
+  const tmap=(d.tiles||[]).map(id=>T_BY_ID[id]||0);
+  const fmap=(d.feats||[]).map(id=>F_BY_ID[id]||0);
+  (d.terr||[]).slice(0,n).forEach((v,i)=>{
+    S.terr[i]= v ? (tmap.length ? (tmap[v-1]||0) : (v<=TERRAINS.length?v:0)) : 0; });
+  (d.feat||[]).slice(0,n).forEach((v,i)=>{
+    S.feat[i]= v ? (fmap.length ? (fmap[v-1]||0) : (v<=FEATURES.length?v:0)) : 0; });
+  for(const k in (d.labels||{})) if(+k<n) S.labels[k]=String(d.labels[k]).slice(0,28);
+  for(const k in (d.memo||{}))   if(+k<n) S.memo[k]=String(d.memo[k]).slice(0,1200);
+  if(d.show){ S.grid=!!d.show.grid; S.coord=!!d.show.coord;
+              S.notes=d.show.notes!==false; S.mono=!!d.show.mono; }
+  sel=null;
+}
+document.getElementById("save").onclick=()=>{
+  dl(URL.createObjectURL(new Blob([serialise()],{type:"application/json"})),
+     slug()+".hexplate.json");
+};
+document.getElementById("open").onclick=()=>{
+  const inp=document.createElement("input"); inp.type="file"; inp.accept=".json,application/json";
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        push(); hydrate(JSON.parse(rd.result)); syncRail(); closeInspector();
+        if(autoFit){ ppmView=fitPpm(); showZoom(); }
+        refresh(); store();
+        document.getElementById("hint").textContent="Opened "+f.name;
+      }catch(err){
+        document.getElementById("hint").textContent="That file isn’t a hex plate — expected .hexplate.json";
+      }
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+};
+function syncRail(){
+  buildTileSwatches();
+  colsI.value=colsO.value=S.cols; rowsI.value=rowsO.value=S.rows;
+  document.getElementById("title").value=S.title;
+
+  SHOW.forEach(([id,k])=>{ document.getElementById(id).checked=S[k]; });
+  brushO.value=[1,7,19][brush]+" hex"+(brush?"es":"");
+  showZoom();
+}
+
+/* ══════════════ custom tiles ══════════════ */
+const TM_COLORS = ["#58A8D8","#7FCFEA","#86CC72","#4E9E4A","#2A7248","#9CAF6E",
+                   "#F5CE94","#D9CB70","#B58A57","#CFE0E8","#B0B6BC","#8E7BA6",
+                   "#D98A7B","#E0B0C8","#7BC0B4","#C9C0A8","#A8894F","#6E86A8"];
+const tileModal=document.getElementById("tileModal");
+let tmColor="#CFE0E8", tmSvg=null, tmSvgName="", tmKeepColour=false;
+const TM_PREVIEW_ID="__tmPreview";
+
+function markFor(base){ const L=lum(base); return L>.2 ? shade(base,-.38) : shade(base,.30); }
+
+function drawTileHex(c,w,h,base,mark,svgId,keep){
+  c.clearRect(0,0,w,h);
+  c.fillStyle=PAPER; c.fillRect(0,0,w,h);
+  const s=Math.min(w,h)*.42, cx=w/2, cy=h/2;
+  const hex=()=>{ c.beginPath();
+    for(let i=0;i<6;i++){ const a=-Math.PI/6+i*Math.PI/3;
+      const px=cx+s*Math.cos(a), py=cy+s*Math.sin(a); i?c.lineTo(px,py):c.moveTo(px,py); }
+    c.closePath(); };
+  c.save(); hex(); c.clip();
+  SYM_SQUASH=1; SYM_SHIFT=0;
+  c.fillStyle=base; c.fill();
+  if(svgId) drawSvgSymbol(c,cx,cy,s,svgId,mark,keep);
+  c.restore();
+  c.strokeStyle="rgba(46,36,24,.55)"; c.lineWidth=1; hex(); c.stroke();
+}
+function tmRefresh(){
+  const cv2=document.getElementById("tmPreview");
+  drawTileHex(cv2.getContext("2d"),cv2.width,cv2.height,
+              tmColor,markFor(tmColor), tmSvg?TM_PREVIEW_ID:null, tmKeepColour);
+  [...document.getElementById("tmColors").children]
+    .forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.col===tmColor)));
+  document.getElementById("tmFileName").textContent =
+    tmSvgName || "No symbol — a flat colour tile";
+  document.getElementById("tmKeepWrap").style.display = tmSvg ? "" : "none";
+}
+(function buildColourSwatches(){
+  const cw=document.getElementById("tmColors");
+  TM_COLORS.forEach(col=>{
+    const b=document.createElement("button");
+    b.type="button"; b.dataset.col=col; b.style.background=col; b.title=col;
+    b.onclick=()=>{ tmColor=col; document.getElementById("tmColor").value=col; tmRefresh(); };
+    cw.appendChild(b);
+  });
+})();
+document.getElementById("tmColor").oninput=e=>{ tmColor=e.target.value; tmRefresh(); };
+document.getElementById("tmKeep").onchange=e=>{ tmKeepColour=e.target.checked; tmRefresh(); };
+document.getElementById("tmPick").onclick=()=>document.getElementById("tmFile").click();
+document.getElementById("tmDrop").onclick=()=>{
+  tmSvg=null; tmSvgName=""; tmKeepColour=false;
+  document.getElementById("tmKeep").checked=false;
+  document.getElementById("tmFile").value="";
+  delete SVG_CACHE[TM_PREVIEW_ID];
+  tmRefresh();
+};
+document.getElementById("tmFile").onchange=e=>{
+  const f=e.target.files && e.target.files[0]; if(!f) return;
+  const warn=document.getElementById("tmWarn");
+  if(f.size>96*1024){ warn.textContent="That SVG is over 96 KB — try a simpler one."; return; }
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let txt=String(rd.result);
+    if(txt.indexOf("<svg")<0){ warn.textContent="That file isn't an SVG."; return; }
+    txt=txt.replace(/<script[\s\S]*?<\/script>/gi,"");   // inert anyway, dropped for safety
+    warn.textContent="";
+    tmSvg=txt; tmSvgName=f.name;
+    loadTileSvg(TM_PREVIEW_ID, txt, tmRefresh);
+  };
+  rd.readAsText(f);
+};
+document.getElementById("tmClose").onclick=()=>tileModal.classList.remove("on");
+tileModal.addEventListener("pointerdown",e=>{ if(e.target===tileModal) tileModal.classList.remove("on"); });
+document.getElementById("newTile").onclick=()=>{
+  document.getElementById("tmName").value="";
+  document.getElementById("tmWarn").textContent="";
+  document.getElementById("tmFile").value="";
+  document.getElementById("tmKeep").checked=false;
+  tmColor="#CFE0E8"; tmSvg=null; tmSvgName=""; tmKeepColour=false;
+  delete SVG_CACHE[TM_PREVIEW_ID];
+  document.getElementById("tmColor").value=tmColor;
+  tileModal.classList.add("on");
+  tmRefresh();
+  document.getElementById("tmName").focus();
+};
+document.getElementById("tmSave").onclick=()=>{
+  const nm=document.getElementById("tmName").value.trim();
+  const warn=document.getElementById("tmWarn");
+  if(!nm){ warn.textContent="Give the tile a name."; return; }
+  if(TERRAINS.length>=40){ warn.textContent="That is as many tiles as a sheet can hold."; return; }
+  const id="cu_"+Date.now().toString(36);
+  S.custom.push({id, name:nm, base:tmColor, sym:"none",
+                 svg:tmSvg, svgName:tmSvgName, keepColour:tmKeepColour});
+  if(tmSvg) loadTileSvg(id, tmSvg, ()=>{ buildTileSwatches(); refresh(); });
+  rebuildTiles(); buildTileSwatches();
+  curT=id;
+  [...terrBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",TERRAINS[n].id===curT));
+  tileModal.classList.remove("on");
+  setTool("paint"); refresh(); store();
+};
+function deleteCustom(id){
+  const v=T_BY_ID[id];
+  if(v) for(let i=0;i<S.terr.length;i++) if(S.terr[i]===v) S.terr[i]=0;
+  S.custom=S.custom.filter(t=>t.id!==id);
+  rebuildTiles(); buildTileSwatches(); refresh(); store();
+}
+
+/* ══════════════ notes page ══════════════ */
+function buildNotesPage(){
+  const body=document.getElementById("notesBody");
+  if(!body) return;
+  body.innerHTML="";
+  const keys=Object.keys(S.memo).filter(k=>S.memo[k]);
+  if(!keys.length){
+    const p=document.createElement("p");
+    p.style.cssText="color:var(--dimmer);font:400 15px/1.6 'IBM Plex Mono',monospace;grid-column:1/-1";
+    p.textContent="No notes yet. Use the Inspect tool to annotate hexes.";
+    body.appendChild(p); return;
+  }
+  keys.sort((a,b)=>+a-+b).forEach(k=>{
+    const i=+k, col=i%S.cols, r=(i-col)/S.cols;
+    if(!inside(col,r)) return;
+    const gc=gridCoord(col,r);
+    const t=S.terr[i], f=S.feat[i];
+    const tName=t?TERRAINS[t-1].name:"—", fName=f?FEATURES[f-1].name:"";
+    const nm=S.labels[i]||"";
+    const card=document.createElement("div");
+    card.style.cssText="background:var(--panel);border:1px solid var(--edge);border-radius:6px;"
+      +"padding:18px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .15s";
+    const title=document.createElement("div");
+    title.style.cssText="display:flex;align-items:baseline;gap:12px";
+    const gcSpan=document.createElement("span"); gcSpan.style.cssText="font:600 18px/1 'IBM Plex Mono',monospace;color:var(--text)"; gcSpan.textContent=gc; title.appendChild(gcSpan);
+    if(nm){ const nmSpan=document.createElement("span"); nmSpan.style.cssText="font:500 13px/1 'Archivo',sans-serif;color:var(--dim)"; nmSpan.textContent=nm; title.appendChild(nmSpan); }
+    const sub=document.createElement("div");
+    sub.style.cssText="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--dimmer);text-transform:uppercase";
+    sub.textContent=tName+(fName?" · "+fName:"");
+    const txt=document.createElement("div");
+    txt.style.cssText="font:400 14px/1.7 'Archivo',sans-serif;color:var(--text);white-space:pre-wrap";
+    txt.textContent=S.memo[i];
+    card.appendChild(title); card.appendChild(sub); card.appendChild(txt);
+    card.addEventListener("click",()=>{ sel=i; closePage(); openInspector(); });
+    card.addEventListener("mouseenter",()=>{ card.style.borderColor="var(--accent)"; });
+    card.addEventListener("mouseleave",()=>{ card.style.borderColor="var(--edge)"; });
+    body.appendChild(card);
+  });
+}
+const notesPage=document.getElementById("notesPage");
+function openPage(){ buildNotesPage(); notesPage.style.display="flex"; }
+function closePage(){ notesPage.style.display="none"; }
+document.getElementById("notesClose").onclick=closePage;
+document.getElementById("notesBtn").onclick=openPage;
+
+/* ══════════════ session storage ══════════════ */
+const KEY="hexlore:plate", OLD_KEY="hexsurvey:plate";
+let saveTmr=null;
+function store(){
+  if(!window.storage) return;
+  clearTimeout(saveTmr);
+  saveTmr=setTimeout(()=>{ try{ window.storage.set(KEY,serialise()); }catch(e){} },700);
+}
+function randName(){
+  const adj=["Ashen","Crimson","Iron","Silent","Hollow","Sunken","Broken","Grey",
+              "Ancient","Blighted","Faded","Bitter","Wandering","Forsaken","Dark",
+              "Scarred","Lost","Pale","Storm","Ember"];
+  const noun=["Reach","Vale","Moor","Crossing","Expanse","Waste","Fen","Marches",
+               "Shore","Downs","Pass","Hold","Hollow","Basin","Heath","Strand",
+               "Peaks","Crown","Gate","Brink"];
+  const prefix=["The ","The ","","","The ",""];
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  return pick(prefix)+pick(adj)+" "+pick(noun);
+}
+async function boot(){
+  if(!S.title){ S.title=randName(); }
+  syncRail();
+  if(window.storage){
+    try{
+      let r=null;
+      try{ r=await window.storage.get(KEY); }
+      catch(e){ /* nothing under the current key */ }
+      if(!r||!r.value){
+        // carry over anything saved before the rename
+        try{ r=await window.storage.get(OLD_KEY); }catch(e){}
+      }
+      if(r&&r.value){ hydrate(JSON.parse(r.value)); syncRail(); }
+    }catch(e){ /* nothing stored yet */ }
+  }
+  try{ await document.fonts.ready; }catch(e){}
+  ppmView=fitPpm(); showZoom();
+  refresh();
+}
+
+/* ══════════════ keys ══════════════ */
+addEventListener("keydown",e=>{
+  const t=e.target.tagName;
+  if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT"){
+    if(e.key==="Escape"){
+      e.target.blur();
+      if(insp.classList.contains("on")) closeInspector();
+    }
+    return;
+  }
+  const k=e.key.toLowerCase();
+  if((e.metaKey||e.ctrlKey)&&k==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if((e.metaKey||e.ctrlKey)&&k==="y"){ e.preventDefault(); redo(); return; }
+  if(e.metaKey||e.ctrlKey) return;
+  const map={b:"paint",g:"fill",f:"feature",e:"erase",i:"inspect"};
+  if(map[k]) setTool(map[k]);
+  if(k==="c"){ S.coord=!S.coord; document.getElementById("cCoord").checked=S.coord; refresh(); store(); }
+  if(k==="n"&&!insp.classList.contains("on")) openPage();
+  if(k==="escape") closeInspector();
+  if(k==="+"||k==="="){ setZoom(ppmView*1.25,true); }
+  if(k==="-"||k==="_"){ setZoom(ppmView/1.25,true); }
+  if(k==="0"){ doFit(); }
+  if(k==="["&&brush>0){ brushI.value=--brush; brushI.oninput(); }
+  if(k==="]"&&brush<2){ brushI.value=++brush; brushI.oninput(); }
+});
+
+boot();
+</script>
