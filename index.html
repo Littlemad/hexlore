@@ -7,10 +7,10 @@
 <style id="pagerule">@page{size:A4 landscape;margin:0}</style>
 <style>
   :root{
-    --ink:#0C1720; --panel:#152430; --panel2:#1C2F3D; --raise:#243D4E;
-    --edge:#2B4657; --edge-soft:#1F3543;
-    --text:#D9E5EC; --dim:#8AA4B4; --dimmer:#5F7B8C;
-    --accent:#45C4DE; --brass:#D8AC3E;
+    --ink:#081408; --panel:#0F2212; --panel2:#142B18; --raise:#19331E;
+    --edge:#223D28; --edge-soft:#172E1C;
+    --text:#C8E0CC; --dim:#6A9878; --dimmer:#456858;
+    --accent:#3DB56A; --brass:#D8AC3E;
     --paper:#EDE5D5;
     --pw:297mm; --ph:210mm;
     --r:3px;
@@ -42,7 +42,7 @@
   }
   .btn:hover:not(:disabled){background:var(--raise);border-color:var(--accent)}
   .btn:disabled{opacity:.35;cursor:default}
-  .btn.key{border-color:#3C6274;color:#EAF6FA}
+  .btn.key{border-color:#2E5A3A;color:#DFF0E4}
   .btn[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
   .btn:focus-visible,.swatch:focus-visible,input:focus-visible,
   .tool:focus-visible,textarea:focus-visible,select:focus-visible{
@@ -91,7 +91,7 @@
     min-width:46px;text-align:right}
   input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
   input[type=text],textarea,select{
-    min-width:0;background:#0F1C25;border:1px solid var(--edge);
+    min-width:0;background:#0C1A10;border:1px solid var(--edge);
     border-radius:var(--r);padding:7px 9px;font-size:14px;font-family:inherit}
   .row input[type=text],.row textarea,.row select{flex:1}
   textarea{resize:vertical;min-height:66px;line-height:1.4}
@@ -101,7 +101,7 @@
   .seg button[aria-pressed="true"]{background:var(--raise);color:#fff}
 
   .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-  .swatch{position:relative;background:#0F1C25;border:1px solid var(--edge);
+  .swatch{position:relative;background:#0C1A10;border:1px solid var(--edge);
     border-radius:var(--r);padding:4px 4px 3px;cursor:pointer;overflow:hidden}
   .swatch canvas{display:block;width:100%;height:auto;border-radius:2px}
   .swatch span{display:block;font-size:12px;line-height:1.3;text-align:center;
@@ -117,7 +117,7 @@
   .note{font:400 12px/1.5 "IBM Plex Mono",monospace;color:var(--dimmer);margin-top:12px}
 
   #stage{flex:1 1 auto; min-width:0; overflow:auto; padding:22px;
-    background:radial-gradient(120% 90% at 50% 0%, #16262F 0%, #0B141B 70%);
+    background:radial-gradient(120% 90% at 50% 0%, #112215 0%, #081408 70%);
     display:flex; align-items:flex-start; justify-content:center}
   /* only the width is ever set in script, so the sheet can never be squashed */
   #plate{display:block; height:auto; border-radius:1px;
@@ -127,7 +127,7 @@
   /* hex inspector, shown as a full page so notes have room to breathe */
   #insp{
     position:fixed; inset:0; z-index:40; display:none;
-    background:rgba(6,12,17,.82); padding:4vh 4vw;
+    background:rgba(4,10,5,.82); padding:4vh 4vw;
   }
   #insp.on{display:flex; align-items:stretch; justify-content:center}
   #insp .isheet{
@@ -155,13 +155,13 @@
     line-height:1.65;font-size:15.5px}
   #insp .ifoot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   #insp .ifoot .btn{font-size:13.5px;padding:9px 14px}
-  #insp .ibtn-save{background:#2A5C8A;border-color:#3E7AB8;color:#fff;font-weight:600}
-  #insp .ibtn-save:hover{background:#3468A0;border-color:#5094D4}
+  #insp .ibtn-save{background:#185C36;border-color:#268A50;color:#fff;font-weight:600}
+  #insp .ibtn-save:hover{background:#1D7041;border-color:#2EA85F}
   #insp .ihelp{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer)}
 
   /* custom tile editor */
   #tileModal{position:fixed;inset:0;z-index:45;display:none;
-    background:rgba(6,12,17,.82);padding:4vh 4vw}
+    background:rgba(4,10,5,.82);padding:4vh 4vw}
   #tileModal.on{display:flex;align-items:center;justify-content:center}
   #tileModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:520px;
     max-height:92vh;background:var(--panel);border:1px solid var(--edge);
@@ -176,15 +176,15 @@
     letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
   #tileModal input[type=text]{width:100%;font-size:15px;padding:10px 12px}
   #tileModal input[type=color]{width:100%;height:34px;padding:2px;cursor:pointer;
-    background:#0F1C25;border:1px solid var(--edge);border-radius:var(--r)}
-  .tmswatches{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+    background:#0C1A10;border:1px solid var(--edge);border-radius:var(--r)}
+  .tmswatches{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
   .tmswatches button{aspect-ratio:1;border:2px solid transparent;border-radius:4px;
     cursor:pointer;padding:0}
   .tmswatches button[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
   .svgpick{display:flex;gap:8px}
   .svgpick .btn{flex:1}
   .svgname{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer);
-    padding:7px 9px;background:#0F1C25;border:1px dashed var(--edge);
+    padding:7px 9px;background:#0C1A10;border:1px dashed var(--edge);
     border-radius:var(--r);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #tmPreview{width:100%;height:auto;border-radius:4px;background:var(--paper)}
   .swatch .del{position:absolute;top:2px;right:2px;width:16px;height:16px;
@@ -223,7 +223,7 @@
 
 <header>
   <div class="wordmark">Hex<em>lore</em></div>
-  <span class="version">v0.1</span>
+  <span class="version">v0.2</span>
   <a href="https://ko-fi.com/smilingdmrpg" target="_blank" rel="noopener"
      style="font:500 12px/1 'IBM Plex Mono',monospace;color:var(--dimmer);
             text-decoration:none;border:1px solid var(--edge);border-radius:var(--r);
@@ -252,7 +252,7 @@
       <h2>Title</h2>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="text" id="title" maxlength="42" placeholder="Untitled plate"
-               style="flex:1;background:#0F1C25;border:1px solid var(--edge);border-radius:var(--r);padding:8px 10px;font-size:14px">
+               style="flex:1;background:#0C1A10;border:1px solid var(--edge);border-radius:var(--r);padding:8px 10px;font-size:14px">
         <button class="btn" id="randTitle" title="Generate a random fantasy name" style="font-size:17px;padding:6px 10px">⚄</button>
       </div>
     </div>
@@ -286,18 +286,21 @@
     </div>
 
     <div class="grp">
-      <h2>Features</h2>
+      <h2>Point of interest</h2>
       <div class="swatches" id="features"></div>
     </div>
 
     <div class="grp" style="border-bottom:0">
       <h2>Show</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" id="cGrid" checked> Hex outlines</label>
+      <div class="row" style="margin-top:0">
+        <label for="hexOpacity" style="flex:0 0 80px;font-size:13.5px;color:var(--dim)">Hex opacity</label>
+        <input type="range" id="hexOpacity" min="0" max="100" value="72" step="1">
+        <output id="hexOpacityOut" style="font:500 13.5px/1 'IBM Plex Mono',monospace;color:var(--accent);min-width:36px;text-align:right">72%</output>
+      </div>
+      <div class="checks" style="margin-top:10px">
         <label class="check"><input type="checkbox" id="cCoord" checked> Coordinates</label>
         <label class="check"><input type="checkbox" id="cNotes" checked> Note marks</label>
         <label class="check"><input type="checkbox" id="cMono"> Monochrome</label>
-
       </div>
     </div>
 
@@ -385,7 +388,10 @@
 "use strict";
 
 /* ══════════════ colour ══════════════ */
-const PAPER="#EDE5D5", PAPERLINE="#B4A78E", INK="#22323C", META="#7A6E58";
+const PAPER_SCREEN="#EDE5D5", PAPERLINE_SCREEN="#B4A78E";
+const PAPER_PRINT="#FFFFFF",  PAPERLINE_PRINT="#BBBBBB";
+let PAPER=PAPER_SCREEN, PAPERLINE=PAPERLINE_SCREEN;
+const INK="#22323C", META="#7A6E58";
 const LIGHT_TEXT="#F6F2E9", DARK_TEXT="#1A2530";
 
 function hxc(c){
@@ -629,7 +635,8 @@ const BUILTIN_TILES = [
   { id:"desert",   name:"Desert",   base:"#F5CE94", sym:"sand"  },
   { id:"oasis",    name:"Oasis",    base:"#F5CE94", sym:"palm"  },
   { id:"hills",    name:"Hills",    base:"#F5CE94", sym:"hills" },
-  { id:"mountain", name:"Mountain", base:"#B58A57", sym:"peaks" }
+  { id:"mountain", name:"Mountain", base:"#B58A57", sym:"peaks" },
+  { id:"tundra",   name:"Tundra",   base:"#C8D4C0", sym:"dots"  }
 ];
 
 function makeTile(spec){
@@ -637,8 +644,8 @@ function makeTile(spec){
     id:spec.id, name:spec.name, base:spec.base, sym:spec.sym, custom:!!spec.custom,
     svg:spec.svg||null, svgName:spec.svgName||"", keepColour:!!spec.keepColour,
     draw(c,x,y,s,d){
-      // Same mark in both colour and mono — one consistent intensity
-      const m = S.mono ? this.mark : this.mark;
+      // In mono: pure INK for maximum print contrast; in colour: tinted tile shade
+      const m = S.mono ? INK : this.mark;
       if(this.svg){ drawSvgSymbol(c,x,y,s,this.id,m,this.keepColour&&!S.mono); return; }
       const L=SYMBOL_LIB[this.sym]; if(L) L.draw(c,x,y,s,m);
     }
@@ -741,7 +748,7 @@ const FEATURES = [
       c.lineTo(x+u*.6, y-u*.02);
       c.lineTo(x+u*.8, y+u*.48);
       c.stroke();
-      c.lineWidth=u*.13;                                   // ground
+      c.lineWidth=u*.13;
       c.beginPath(); c.moveTo(x-u*.86,y+u*.5); c.lineTo(x+u*.86,y+u*.5); c.stroke();
       c.fillStyle=GLYPH;
       c.beginPath();
@@ -836,7 +843,7 @@ const DPMM_CSS=96/25.4;            // 1 CSS pixel per mm at 100% zoom
 const S = {
   cols:20, rows:14, orient:"pointy",
   title:"", scale:"",
-  grid:true, coord:true,  notes:true, mono:false, custom:[], paths:[],
+  hexOpacity:72, coord:true, notes:true, mono:false, custom:[], paths:[],
   terr:null, feat:null, labels:{}, memo:{}
 };
 let tool="paint", brush=0, curT="plain", curF="town";
@@ -1019,16 +1026,24 @@ function paint(c,ppm,L){
     const [cx,cy]=center(col,r,L), def=TERRAINS[t-1];
     c.save(); hexPath(c,cx,cy,s+s*.02); c.clip();
     c.fillStyle=S.mono?PAPER:def.base; c.fill();
-    if(!S.feat[i]) def.draw(c,cx,cy,s,def);
+    // Always draw terrain symbol — faded when a feature overlaps so tile type stays readable
+    if(S.feat[i]){
+      c.globalAlpha=0.28;
+      def.draw(c,cx,cy,s,def);
+      c.globalAlpha=1;
+    } else {
+      def.draw(c,cx,cy,s,def);
+    }
     c.restore();
   }
-  // outlines
-  if(S.grid){
+  // outlines — always drawn, opacity controlled by S.hexOpacity (0–100)
+  {
     // Each shared edge belongs to two hexes. Stroking every hex's whole
     // outline paints interior edges twice and boundary edges once, which
     // makes the outer border visibly paler. Walk unique edges instead and
     // stroke them all in one pass, so every border has identical weight.
-    c.strokeStyle="rgba(46,36,24,.72)"; c.lineWidth=s*.026;
+    const alpha=(S.hexOpacity!==undefined?S.hexOpacity:72)/100;
+    c.strokeStyle="rgba(46,36,24,"+alpha+")"; c.lineWidth=s*.026;
     c.lineJoin="round"; c.lineCap="butt";
     const off=S.orient==="pointy" ? -Math.PI/6 : 0;
     c.beginPath();
@@ -1047,23 +1062,18 @@ function paint(c,ppm,L){
   }
   // ── Paths: roads and rivers — Catmull-Rom spline for soft turns ─────────
   /* Draw a smooth curve through all hex centres using Catmull-Rom splines
-     converted to cubic Bézier segments. This gives a natural river/road
-     bend when the path changes direction between hexes. */
+     converted to cubic Bézier segments. */
   function strokeSpline(c2,pts){
     if(pts.length<2) return;
     if(pts.length===2){ c2.moveTo(pts[0][0],pts[0][1]); c2.lineTo(pts[1][0],pts[1][1]); return; }
     c2.moveTo(pts[0][0],pts[0][1]);
     for(let i=0;i<pts.length-1;i++){
       const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
-      // Chord length between p1 and p2 — control points must not exceed this
       const dx12=p2[0]-p1[0], dy12=p2[1]-p1[1];
       const chord=Math.sqrt(dx12*dx12+dy12*dy12)||1;
-      // Catmull-Rom tangent vectors, scaled by a gentle tension
       const t=0.18;
       let cp1x=p1[0]+(p2[0]-p0[0])*t, cp1y=p1[1]+(p2[1]-p0[1])*t;
       let cp2x=p2[0]-(p3[0]-p1[0])*t, cp2y=p2[1]-(p3[1]-p1[1])*t;
-      // Clamp each control point so it can't be pulled more than half a chord
-      // length away from its anchor — this keeps curves inside the hex
       const maxPull=chord*0.42;
       const d1=Math.sqrt((cp1x-p1[0])**2+(cp1y-p1[1])**2)||1;
       const d2=Math.sqrt((cp2x-p2[0])**2+(cp2y-p2[1])**2)||1;
@@ -1077,14 +1087,18 @@ function paint(c,ppm,L){
        the whole sheet minus every sea/lake hex, so a river meeting the coast
        stops at the shoreline instead of drawing over it. */
     c.save();
+    // Clip to the union of all hex cells, then subtract sea/lake hexes.
+    // This prevents any road, trail or river from drawing outside the grid boundary.
     c.beginPath();
-    c.rect(0,0,L.pw,L.ph);
+    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      hexInto(c,center(col,r,L)[0],center(col,r,L)[1],s+s*.01);
+    }
     for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
       const t=S.terr[idx(col,r)]; if(!t) continue;
       const id=TERRAINS[t-1].id;
       if(id!=="sea" && id!=="lake") continue;
       const [wx,wy]=center(col,r,L);
-      hexInto(c,wx,wy,s+s*.02);
+      hexInto(c,wx,wy,s+s*.01);
     }
     c.clip("evenodd");
 
@@ -1099,14 +1113,14 @@ function paint(c,ppm,L){
         c.strokeStyle="#3D9BC7"; c.lineWidth=s*.10;
         c.beginPath();
         rivers.forEach(path=>{
-          const pts=path.hexes.map(h=>center(h[0],h[1],L));
+          const pts=path.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
           strokeSpline(c,pts);
         });
         c.stroke();
       } else {
         // Mono: twin parallel lines + cross-hatching for each river
         rivers.forEach(path=>{
-          const pts=path.hexes.map(h=>center(h[0],h[1],L));
+          const pts=path.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
           c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK;
           const off=s*.1;
           for(const side of [-1,1]){
@@ -1134,14 +1148,21 @@ function paint(c,ppm,L){
     }
 
     nonRivers.forEach(path=>{
-      const pts=path.hexes.map(h=>center(h[0],h[1],L));
-      if(path.type==="trail"){
-        c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK; c.lineWidth=s*.04;
-        c.setLineDash([s*.22,s*.14,s*.10,s*.18,s*.06,s*.16]);
+      const pts=path.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
+      c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK;
+      if(path.type==="road"){
+        // Main road: solid unbroken line
+        c.lineWidth=s*.055;
+        c.beginPath(); strokeSpline(c,pts); c.stroke();
+      } else if(path.type==="trail"){
+        // Side road: thin line with small dashes
+        c.lineWidth=s*.03;
+        c.setLineDash([s*.12,s*.10]);
         c.beginPath(); strokeSpline(c,pts); c.stroke();
         c.setLineDash([]);
       } else {
-        c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=INK; c.lineWidth=s*.07;
+        // Legacy fallback
+        c.lineWidth=s*.055;
         c.beginPath(); strokeSpline(c,pts); c.stroke();
       }
     });
@@ -1169,8 +1190,18 @@ function paint(c,ppm,L){
     for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
       const i=idx(col,r), t=S.terr[i];
       const [cx,cy]=center(col,r,L);
+      const ty = cy + s*(S.orient==="pointy"?.53:.56);
+      // White knockout pill behind the coord so any road or river crossing
+      // it doesn't bleed through the digits — sized to the measured text.
+      const coord=gridCoord(col,r);
+      const tw2=c.measureText(coord).width;
+      const ph=s*.16, pw2=tw2*.5+s*.03;
+      c.fillStyle=S.mono?PAPER:(t?TERRAINS[t-1].base:PAPER);
+      c.beginPath();
+      c.ellipse(cx,ty,pw2,ph,0,0,Math.PI*2);
+      c.fill();
       c.fillStyle = S.mono ? DARK_TEXT : (t ? TERRAINS[t-1].ink : PAPER_INK);
-      c.fillText(gridCoord(col,r), cx, cy + s*(S.orient==="pointy"?.53:.56));
+      c.fillText(coord, cx, ty);
     }
   }
   SYM_SQUASH=1; SYM_SHIFT=0;
@@ -1184,7 +1215,9 @@ function paint(c,ppm,L){
     // Background disc — tile colour in colour mode, paper in mono
     const bgCol = S.mono ? PAPER : (t ? TERRAINS[t-1].base : PAPER);
     c.fillStyle=bgCol;
-    c.beginPath(); c.arc(cx,fy,u*.92,0,6.283); c.fill();
+    c.globalAlpha=0.55;
+    c.beginPath(); c.arc(cx,fy,u*.72,0,6.283); c.fill();
+    c.globalAlpha=1;
     GLYPH    = S.mono ? INK : (t ? TERRAINS[t-1].ink : PAPER_INK);
     GLYPH_BG = bgCol;
     c.save(); FEATURES[f-1].draw(c,cx,fy,u); c.restore();
@@ -1225,8 +1258,10 @@ function draw(){
   }
   // preview of the path being drawn right now
   if(activePath && activePath.hexes.length){
-    const pts=activePath.hexes.map(h=>center(h[0],h[1],L));
-    if(hover) pts.push(center(hover[0],hover[1],L));
+    const pts=activePath.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
+    // Only append hover if it is not already represented by an exit node
+    const lastH=activePath.hexes[activePath.hexes.length-1];
+    if(hover && !(lastH && lastH.exit)) pts.push(center(hover[0],hover[1],L));
     const col=activePath.type==="river" ? "#3D9BC7" : INK; // road and trail both preview in INK
     ctx.strokeStyle=col; ctx.lineWidth=L.s*.12; ctx.lineCap="round"; ctx.lineJoin="round";
     ctx.beginPath(); pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py)); ctx.stroke();
@@ -1234,9 +1269,9 @@ function draw(){
   // erasepath highlight: tint paths that pass through the hovered hex
   if(tool==="erasepath" && pathEraseHover){
     const [hx,hy]=center(pathEraseHover[0],pathEraseHover[1],L);
-    const doomed=(S.paths||[]).filter(p=>p.hexes.some(h=>h[0]===pathEraseHover[0]&&h[1]===pathEraseHover[1]));
+    const doomed=(S.paths||[]).filter(p=>p.hexes.some(h=>!h.exit&&h[0]===pathEraseHover[0]&&h[1]===pathEraseHover[1]));
     doomed.forEach(path=>{
-      const pts=path.hexes.map(h=>center(h[0],h[1],L));
+      const pts=path.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
       ctx.save();
       ctx.strokeStyle="rgba(220,60,40,.9)"; ctx.lineWidth=L.s*.28;
       ctx.lineCap="round"; ctx.lineJoin="round";
@@ -1383,11 +1418,20 @@ function startPath(type,col,r){
 }
 function extendPath(col,r){
   if(!activePath) return;
-  const last=activePath.hexes[activePath.hexes.length-1];
-  if(last[0]===col && last[1]===r) return;   // same hex, skip
-  activePath.hexes.push([col,r]);
+  const hexes=activePath.hexes;
+  const last=hexes[hexes.length-1];
+  if(last && !last.exit && last[0]===col && last[1]===r) return;  // same hex, skip
+  if(last && last.exit) hexes.pop();  // remove exit node when back on grid
+  // If the entered hex is the second-to-last, the user dragged back — trim the last hex
+  if(hexes.length>=2){
+    const prev=hexes[hexes.length-2];
+    if(prev && !prev.exit && prev[0]===col && prev[1]===r){
+      hexes.pop(); return;
+    }
+  }
+  hexes.push([col,r]);
 }
-function hexEq(a,b){ return a[0]===b[0]&&a[1]===b[1]; }
+function hexEq(a,b){ if(!a||!b||a.exit||b.exit) return false; return a[0]===b[0]&&a[1]===b[1]; }
 function commitPath(){
   if(!activePath) return;
   if(activePath.hexes.length>=2){
@@ -1425,25 +1469,50 @@ function commitPath(){
   activePath=null;
 }
 function erasePathsAt(col,r){
-  S.paths=S.paths.filter(p=>!p.hexes.some(h=>h[0]===col&&h[1]===r));
+  S.paths=S.paths.filter(p=>!p.hexes.some(h=>!h.exit&&h[0]===col&&h[1]===r));
 }
 
 // Override pointerdown/pointermove/pointerup for road/river tools
 const _origDown=cv.onpointerdown||null;
 
+/* ── Exit-point helpers ──────────────────────────────────────────────────────
+   An exit node has the form {exit:true, col, row, ex, ey} where (ex,ey) is
+   the mm coordinate of the outward edge midpoint of the border hex [col,row].
+   It is appended as the last point of a path when the user drags off the grid,
+   giving the visual impression that the road continues to an adjacent map. */
+function exitPoint(borderCol, borderRow, mx, my, L){
+  const [cx,cy]=center(borderCol,borderRow,L);
+  // Find which of the 6 edge midpoints is closest to the drag position
+  const s=L.s;
+  const off=S.orient==="pointy" ? -Math.PI/6 : 0;
+  let best=null, bd=Infinity;
+  for(let k=0;k<6;k++){
+    const a1=off+k*Math.PI/3, a2=off+(k+1)*Math.PI/3;
+    const emx=(cx+s*Math.cos(a1)+cx+s*Math.cos(a2))/2;
+    const emy=(cy+s*Math.sin(a1)+cy+s*Math.sin(a2))/2;
+    // Only consider edges that face away from the grid interior
+    const nb=edgeNeighbour(borderCol,borderRow,k);
+    if(inside(nb[0],nb[1])) continue;   // shared with another hex → interior edge
+    const d=(emx-mx)*(emx-mx)+(emy-my)*(emy-my);
+    if(d<bd){ bd=d; best={ex:emx,ey:emy}; }
+  }
+  if(!best) return null;
+  return {exit:true, col:borderCol, row:borderRow, ex:best.ex, ey:best.ey};
+}
+
 cv.addEventListener("pointerdown",e=>{
-  if(tool!=="road"&&tool!=="river"&&tool!=="trail"&&tool!=="erasepath") return;
+  if(tool!=="road"&&tool!=="trail"&&tool!=="river"&&tool!=="erasepath") return;
   const [mx,my,L]=toSheet(e);
   const cell=pick(mx,my,L); if(!cell) return;
   if(e.button===2||e.shiftKey){ push(); erasePathsAt(cell[0],cell[1]); store(); refresh(); return; }
-  if(tool==="erasepath") return; // erase happens on pointerup (click), not here
+  if(tool==="erasepath") return;
   cv.setPointerCapture(e.pointerId);
   startPath(tool,cell[0],cell[1]);
   hover=cell; draw();
 },{capture:false});
 
 cv.addEventListener("pointermove",e=>{
-  if(tool!=="road"&&tool!=="river"&&tool!=="trail"&&tool!=="erasepath") return;
+  if(tool!=="road"&&tool!=="trail"&&tool!=="river"&&tool!=="erasepath") return;
   const [mx,my,L]=toSheet(e);
   let cell=pick(mx,my,L);
   if(tool==="erasepath"){
@@ -1451,18 +1520,45 @@ cv.addEventListener("pointermove",e=>{
     if(cell) hover=cell;
     draw(); return;
   }
-  // If dragging a path outside the grid, snap to the nearest valid hex on
-  // the boundary so the path continues off-edge instead of freezing.
-  if(!cell && activePath){
+  if(!cell && activePath && activePath.hexes.length>=1){
+    // Off-grid: find nearest border hex and compute exit edge midpoint
     let best=null, bd=Infinity;
     for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+      // Only consider border hexes (at least one neighbour is outside the grid)
+      const isBorder=neighbours(col,r).length<6 ||
+        [0,1,2,3,4,5].some(k=>{ const nb=edgeNeighbour(col,r,k); return !inside(nb[0],nb[1]); });
+      if(!isBorder) continue;
       const [cx,cy]=center(col,r,L);
       const d=(cx-mx)*(cx-mx)+(cy-my)*(cy-my);
       if(d<bd){ bd=d; best=[col,r]; }
     }
-    cell=best;
+    if(best){
+      hover=best;
+      // Only add/update exit if the last hex in the active path is this border hex
+      const last=activePath.hexes[activePath.hexes.length-1];
+      if(last && !last.exit && last[0]===best[0] && last[1]===best[1]){
+        // Replace any previous exit node
+        const prevExit=activePath.hexes[activePath.hexes.length-1];
+        if(prevExit && prevExit.exit) activePath.hexes.pop();
+        const ep=exitPoint(best[0],best[1],mx,my,L);
+        if(ep) activePath.hexes.push(ep);
+      } else if(last && last.exit){
+        // Update the exit direction as the user moves
+        activePath.hexes.pop();
+        const ep=exitPoint(best[0],best[1],mx,my,L);
+        if(ep) activePath.hexes.push(ep);
+      }
+    }
+    refresh(); return;
   }
-  if(cell){ hover=cell; if(activePath) extendPath(cell[0],cell[1]); }
+  if(cell){
+    // Back on the grid: remove any trailing exit node
+    if(activePath){
+      const last=activePath.hexes[activePath.hexes.length-1];
+      if(last && last.exit) activePath.hexes.pop();
+    }
+    hover=cell; if(activePath) extendPath(cell[0],cell[1]);
+  }
   refresh();
 },{capture:false});
 
@@ -1530,7 +1626,7 @@ function readout(cell){
 }
 function showFit(L){
   document.getElementById("fitNote").textContent=
-    "A4 landscape · hex "+(L.s*2).toFixed(1)+"mm tall "+(L.s*SQ3).toFixed(1)+"mm wide";
+    "hex "+(L.s*2).toFixed(1)+"mm tall "+(L.s*SQ3).toFixed(1)+"mm wide";
 }
 
 /* ══════════════ rail ══════════════ */
@@ -1538,8 +1634,9 @@ function showFit(L){
 const TOOLS=[
   {id:"paint",   name:"Paint",   svg:'<path d="M3 13l8-8 4 4-8 8H3z"/><path d="M11 3l2 2"/>'},
   {id:"fill",    name:"Fill",    svg:'<path d="M2 9l7-7 5 5-7 7z"/><path d="M12 12c2 2 2 3 0 3s-2-1 0-3z"/>'},
-  {id:"road",    name:"Road",    svg:'<path fill="none" stroke-linecap="round" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
-  {id:"trail",   name:"Trail",   svg:'<path fill="none" stroke-linecap="round" stroke-dasharray="3 2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
+  {id:"road", name:"Road", svg:'<path fill="none" stroke-linecap="round" stroke-width="2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
+  {id:"trail", name:"Trail", svg:'<path fill="none" stroke-linecap="round" stroke-dasharray="3 2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
+  
   {id:"river",   name:"River",   svg:'<path fill="none" stroke-linecap="round" stroke-width="2" d="M2 13 C5 10 9 7 14 3"/>'},
   {id:"inspect", name:"Inspect", svg:'<path d="M3.2 1.9l9.2 6.1-4.8.6 2.5 4.1-1.7.9-2.5-4.2-2.7 2.7z"/>'},
   {id:"erasepath",name:"Erase path",svg:'<path fill="none" stroke-linecap="round" d="M2 13 Q5 9 8 8 Q11 7 14 3"/><line x1="12" y1="12" x2="16" y2="8" stroke-width="2.5"/><line x1="16" y1="12" x2="12" y2="8" stroke-width="2.5"/>'},
@@ -1549,9 +1646,10 @@ const HINTS={
   paint:"Drag to paint · right-click erases",
   fill:"Click to flood every connected matching tile",
   feature:"Click a hex to place the feature · click again to remove",
-  erase:"Drag to erase tiles, features and notes",
+  erase:"Drag to erase tiles, points of interest and notes",
   road:"Click or drag through hexes to draw a road · right-click to erase",
   trail:"Click or drag through hexes to draw a trail · right-click to erase",
+
   river:"Click or drag through hexes to draw a river · right-click to erase",
   erasepath:"Hover a path to highlight it · click to erase it",
   inspect:"Click any hex to read and edit its record"
@@ -1614,7 +1712,7 @@ function buildTileSwatches(){
       curT=t.id;
       [...terrBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",TERRAINS[n].id===curT));
       [...featBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
-      if(tool!=="paint") setTool("paint");
+      if(tool!=="paint"&&tool!=="fill") setTool("paint");
     };
     terrBox.appendChild(b);
   });
@@ -1693,11 +1791,22 @@ document.getElementById("zIn").onclick=()=>setZoom(ppmView*1.25,true);
 document.getElementById("zOut").onclick=()=>setZoom(ppmView/1.25,true);
 document.getElementById("zFit").onclick=doFit;
 
-const SHOW=[["cGrid","grid"],["cCoord","coord"],["cNotes","notes"],["cMono","mono"]];
+const SHOW=[["cCoord","coord"],["cNotes","notes"],["cMono","mono"]];
 SHOW.forEach(([id,k])=>{
   const el=document.getElementById(id);
   el.onchange=()=>{ S[k]=el.checked; refresh(); store(); };
 });
+
+// Hex opacity slider
+(function(){
+  const sl=document.getElementById("hexOpacity");
+  const out=document.getElementById("hexOpacityOut");
+  sl.oninput=()=>{
+    S.hexOpacity=+sl.value;
+    out.textContent=sl.value+"%";
+    refresh(); store();
+  };
+})();
 
 document.getElementById("clear").onclick=()=>{ push(); blank(); closeInspector(); refresh(); store(); };
 document.getElementById("undo").onclick=undo;
@@ -1713,18 +1822,20 @@ document.getElementById("png").onclick=()=>{
   const L=layout();
   const off=document.createElement("canvas");
   off.width=Math.round(L.pw*DPMM_PRINT); off.height=Math.round(L.ph*DPMM_PRINT);
+  PAPER=PAPER_PRINT; PAPERLINE=PAPERLINE_PRINT; GLYPH_BG=PAPER;
   paint(off.getContext("2d"),DPMM_PRINT,L);
+  PAPER=PAPER_SCREEN; PAPERLINE=PAPERLINE_SCREEN; GLYPH_BG=PAPER;
   dl(off.toDataURL("image/png"), slug()+"-a4-300dpi.png");
 };
 document.getElementById("print").onclick=()=>window.print();
-window.addEventListener("beforeprint",()=>{ printing=true; refresh(); });
-window.addEventListener("afterprint",()=>{ printing=false; refresh(); });
+window.addEventListener("beforeprint",()=>{ printing=true; PAPER=PAPER_PRINT; PAPERLINE=PAPERLINE_PRINT; GLYPH_BG=PAPER; refresh(); });
+window.addEventListener("afterprint",()=>{ printing=false; PAPER=PAPER_SCREEN; PAPERLINE=PAPERLINE_SCREEN; GLYPH_BG=PAPER; refresh(); });
 
 function serialise(){
   return JSON.stringify({
     v:8, cols:S.cols, rows:S.rows,
     title:S.title,
-    show:{grid:S.grid,coord:S.coord,notes:S.notes,mono:S.mono},
+    show:{hexOpacity:S.hexOpacity,coord:S.coord,notes:S.notes,mono:S.mono},
     custom:S.custom, paths:(S.paths||[]),
     tiles:TERRAINS.map(t=>t.id), feats:FEATURES.map(f=>f.id),
     terr:Array.from(S.terr), feat:Array.from(S.feat), labels:S.labels, memo:S.memo
@@ -1749,8 +1860,8 @@ function hydrate(d){
     S.feat[i]= v ? (fmap.length ? (fmap[v-1]||0) : (v<=FEATURES.length?v:0)) : 0; });
   for(const k in (d.labels||{})) if(+k<n) S.labels[k]=String(d.labels[k]).slice(0,28);
   for(const k in (d.memo||{}))   if(+k<n) S.memo[k]=String(d.memo[k]).slice(0,1200);
-  if(d.show){ S.grid=!!d.show.grid; S.coord=!!d.show.coord;
-              S.notes=d.show.notes!==false; S.mono=!!d.show.mono; }
+  if(d.show){ S.hexOpacity=d.show.hexOpacity!==undefined?+d.show.hexOpacity:72;
+              S.coord=!!d.show.coord; S.notes=d.show.notes!==false; S.mono=!!d.show.mono; }
   sel=null;
 }
 document.getElementById("save").onclick=()=>{
@@ -1782,14 +1893,24 @@ function syncRail(){
   document.getElementById("title").value=S.title;
 
   SHOW.forEach(([id,k])=>{ document.getElementById(id).checked=S[k]; });
+  const hexOpSlider=document.getElementById("hexOpacity");
+  const hexOpOut=document.getElementById("hexOpacityOut");
+  hexOpSlider.value=S.hexOpacity!==undefined?S.hexOpacity:72;
+  hexOpOut.textContent=hexOpSlider.value+"%";
   brushO.value=[1,7,19][brush]+" hex"+(brush?"es":"");
   showZoom();
 }
 
 /* ══════════════ custom tiles ══════════════ */
-const TM_COLORS = ["#58A8D8","#7FCFEA","#86CC72","#4E9E4A","#2A7248","#9CAF6E",
-                   "#F5CE94","#D9CB70","#B58A57","#CFE0E8","#B0B6BC","#8E7BA6",
-                   "#D98A7B","#E0B0C8","#7BC0B4","#C9C0A8","#A8894F","#6E86A8"];
+// Colours grouped by family: water · green · arid · cold/rock · special
+const TM_COLORS = [
+  "#58A8D8","#7FCFEA",  // water
+  "#8EBE80","#4E9E4A",  // green land
+  "#2A7248","#AEB4AD",  // jungle / swamp
+  "#F5CE94","#B58A57",  // arid / desert
+  "#C8D4C0","#8FA8B8",  // tundra / cold
+  "#D4B896","#6E6E6E",  // rock / stone
+];
 const tileModal=document.getElementById("tileModal");
 let tmColor="#CFE0E8", tmSvg=null, tmSvgName="", tmKeepColour=false;
 const TM_PREVIEW_ID="__tmPreview";
