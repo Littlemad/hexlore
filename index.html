@@ -88,7 +88,6 @@
     padding:8px 9px;cursor:pointer;font-size:14px}
   .tool:hover{background:var(--panel2)}
   .tool[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
-  .tool svg{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.6}
 
   .row{display:flex;align-items:center;gap:8px;margin-top:8px}
   .row label{font-size:13.5px;color:var(--dim);flex:0 0 68px}
@@ -164,22 +163,22 @@
   #insp .ibtn-save:hover{background:#1D7041;border-color:#2EA85F}
   #insp .ihelp{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer)}
 
-  /* custom tile editor */
-  #tileModal{position:fixed;inset:0;z-index:45;display:none;
+  /* custom tile / POI editor */
+  #tileModal, #featModal{position:fixed;inset:0;z-index:45;display:none;
     background:rgba(4,10,5,.82);padding:4vh 4vw}
-  #tileModal.on{display:flex;align-items:center;justify-content:center}
-  #tileModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:520px;
+  #tileModal.on, #featModal.on{display:flex;align-items:center;justify-content:center}
+  #tileModal .tmsheet, #featModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:520px;
     max-height:92vh;background:var(--panel);border:1px solid var(--edge);
     border-radius:7px;box-shadow:0 30px 80px -20px #000;overflow:hidden}
-  #tileModal .tmhd{display:flex;align-items:center;gap:16px;padding:14px 20px;
+  #tileModal .tmhd, #featModal .tmhd{display:flex;align-items:center;gap:16px;padding:14px 20px;
     background:var(--panel2);border-bottom:1px solid var(--edge)}
-  #tileModal .tmhd b{font:600 16px/1 "Archivo",sans-serif}
-  #tileModal .tmhd .btn{margin-left:auto}
-  #tileModal .tmbody{display:flex;flex-direction:column;gap:16px;padding:20px;overflow-y:auto}
-  #tileModal .ifield{display:flex;flex-direction:column;gap:7px}
-  #tileModal .ifield>span{font:500 11px/1 "IBM Plex Mono",monospace;
+  #tileModal .tmhd b, #featModal .tmhd b{font:600 16px/1 "Archivo",sans-serif}
+  #tileModal .tmhd .btn, #featModal .tmhd .btn{margin-left:auto}
+  #tileModal .tmbody, #featModal .tmbody{display:flex;flex-direction:column;gap:16px;padding:20px;overflow-y:auto}
+  #tileModal .ifield, #featModal .ifield{display:flex;flex-direction:column;gap:7px}
+  #tileModal .ifield>span, #featModal .ifield>span{font:500 11px/1 "IBM Plex Mono",monospace;
     letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
-  #tileModal input[type=text]{width:100%;font-size:15px;padding:10px 12px}
+  #tileModal input[type=text], #featModal input[type=text]{width:100%;font-size:15px;padding:10px 12px}
   #tileModal input[type=color]{width:100%;height:34px;padding:2px;cursor:pointer;
     background:#0C1A10;border:1px solid var(--edge);border-radius:var(--r)}
   .tmswatches{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
@@ -191,7 +190,7 @@
   .svgname{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer);
     padding:7px 9px;background:#0C1A10;border:1px dashed var(--edge);
     border-radius:var(--r);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #tmPreview{width:100%;height:auto;border-radius:4px;background:var(--paper)}
+  #tmPreview, #fmPreview{width:100%;height:auto;border-radius:4px;background:var(--paper)}
   .swatch .del{position:absolute;top:2px;right:2px;width:16px;height:16px;
     border:0;border-radius:3px;background:rgba(10,20,28,.75);color:#E88;
     font-size:12px;line-height:1;cursor:pointer;padding:0;display:none}
@@ -318,7 +317,7 @@
         <output id="brushOut">1 hex</output>
       </div>
       <div class="tools" id="tools"></div>
-      <div class="stack" style="margin-top:8px"><button class="btn" id="clear">Clear sheet</button></div>
+      <div class="stack" style="margin-top:8px"><button class="btn" id="clear">Erase map</button></div>
     </div>
 
     <div class="grp">
@@ -330,6 +329,7 @@
     <div class="grp">
       <h2>Point of interest</h2>
       <div class="swatches" id="features"></div>
+      <div class="stack"><button class="btn" id="newFeat">+ New point of interest</button></div>
     </div>
 
     <div class="grp" style="border-bottom:0">
@@ -418,6 +418,36 @@
       <div class="ifoot">
         <button class="btn ibtn-save" id="tmSave">Save tile</button>
         <span class="ihelp" id="tmWarn"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="featModal">
+  <div class="tmsheet">
+    <div class="tmhd">
+      <b>New point of interest</b>
+      <button class="btn" id="fmClose">Close</button>
+    </div>
+    <div class="tmbody">
+      <label class="ifield"
+        ><span>Name</span> <input type="text" id="fmName" maxlength="18" placeholder="e.g. Watchtower"
+      /></label>
+      <div class="ifield"
+        ><span>Symbol</span>
+        <input type="file" id="fmFile" accept=".svg,image/svg+xml" hidden />
+        <div class="svgpick">
+          <button class="btn" id="fmPick">Choose SVG file</button>
+          <button class="btn" id="fmDrop">Remove</button>
+        </div>
+        <div class="svgname" id="fmFileName">Choose an SVG</div>
+      </div>
+      <div class="ifield"
+        ><span>Preview</span>
+        <canvas id="fmPreview" width="260" height="120"></canvas>
+      </div>
+      <div class="ifoot">
+        <button class="btn ibtn-save" id="fmSave">Save point of interest</button>
+        <span class="ihelp" id="fmWarn"></span>
       </div>
     </div>
   </div>
@@ -776,7 +806,7 @@
   let GLYPH=INK, GLYPH_BG=PAPER;
   function roof(c,x,y,w,h){ c.beginPath(); c.moveTo(x-w,y); c.lineTo(x,y-h); c.lineTo(x+w,y); c.closePath(); c.fill(); }
   function house(c,x,y,u){ c.fillStyle=GLYPH; c.fillRect(x-u*.5,y-u*.05,u,u*.62); roof(c,x,y-u*.02,u*.68,u*.5); }
-  const FEATURES = [
+  const BUILTIN_FEATURES = [
     { id:"town", name:"Town", draw(c,x,y,u){
         // Small filled circle — Hexographer town marker
         c.fillStyle=GLYPH;
@@ -918,7 +948,39 @@
         }
         c.closePath(); c.fill(); }}
   ];
+  const FEATURES = BUILTIN_FEATURES.slice();
   const F_BY_ID={}; FEATURES.forEach((f,i)=>{ F_BY_ID[f.id]=i+1; });
+  function makeCustomFeat(spec){
+    return {
+      id:spec.id, name:spec.name, custom:true, svg:spec.svg||null, svgName:spec.svgName||"",
+      draw(c,x,y,u){
+        if(this.svg) drawSvgSymbol(c,x,y,u*1.6,this.id,GLYPH,false);
+      }
+    };
+  }
+  /* Rebuild the POI list after custom features change, remapping placed
+     marks through their ids so nothing shifts underneath the map. */
+  function rebuildFeatures(){
+    const oldIds=FEATURES.map(f=>f.id);
+    FEATURES.length=0;
+    BUILTIN_FEATURES.forEach(f=>FEATURES.push(f));
+    (S.customFeats||[]).forEach(s=>{
+      FEATURES.push(makeCustomFeat(s));
+      if(s.svg && !(SVG_CACHE[s.id]&&SVG_CACHE[s.id].ready))
+        loadTileSvg(s.id,s.svg,()=>{ if(typeof buildFeatureSwatches==="function") buildFeatureSwatches();
+                                     if(typeof refresh==="function") refresh(); });
+    });
+    for(const k in F_BY_ID) delete F_BY_ID[k];
+    FEATURES.forEach((f,i)=>{ F_BY_ID[f.id]=i+1; });
+    if(S.feat){
+      for(let i=0;i<S.feat.length;i++){
+        const v=S.feat[i]; if(!v) continue;
+        const id=oldIds[v-1];
+        S.feat[i]= id ? (F_BY_ID[id]||0) : 0;
+      }
+    }
+    if(!F_BY_ID[curF]) curF=FEATURES[0].id;
+  }
 
   /* ══════════════ state ══════════════ */
   const A4_SHORT=210, A4_LONG=297;   // millimetres
@@ -929,7 +991,7 @@
   const S = {
     cols:20, rows:14, orient:"pointy",
     title:"", scale:"",
-    hexOpacity:72, coord:true, notes:true, mono:false, custom:[], paths:[],
+    hexOpacity:72, coord:true, notes:true, mono:false, custom:[], customFeats:[], paths:[],
     terr:null, feat:null, labels:{}, memo:{}
   };
   let tool="paint", brush=0, curT="plain", curF="town";
@@ -1771,15 +1833,14 @@
   /* ══════════════ rail ══════════════ */
   /* Feature is not listed here: picking a feature swatch switches to it. */
   const TOOLS=[
-    {id:"paint",   name:"Paint",   svg:'<path d="M3 13l8-8 4 4-8 8H3z"/><path d="M11 3l2 2"/>'},
-    {id:"fill",    name:"Fill",    svg:'<path d="M2 9l7-7 5 5-7 7z"/><path d="M12 12c2 2 2 3 0 3s-2-1 0-3z"/>'},
-    {id:"road", name:"Road", svg:'<path fill="none" stroke-linecap="round" stroke-width="2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
-    {id:"trail", name:"Trail", svg:'<path fill="none" stroke-linecap="round" stroke-dasharray="3 2" d="M2 13 Q5 9 8 8 Q11 7 14 3"/>'},
-
-    {id:"river",   name:"River",   svg:'<path fill="none" stroke-linecap="round" stroke-width="2" d="M2 13 C5 10 9 7 14 3"/>'},
-    {id:"inspect", name:"Inspect", svg:'<path d="M3.2 1.9l9.2 6.1-4.8.6 2.5 4.1-1.7.9-2.5-4.2-2.7 2.7z"/>'},
-    {id:"erasepath",name:"Erase path",svg:'<path fill="none" stroke-linecap="round" d="M2 13 Q5 9 8 8 Q11 7 14 3"/><line x1="12" y1="12" x2="16" y2="8" stroke-width="2.5"/><line x1="16" y1="12" x2="12" y2="8" stroke-width="2.5"/>'},
-    {id:"erase",   name:"Erase tile",svg:'<path d="M4 12h9"/><path d="M6 10l4-6 3 2-4 6H7z"/>'}
+    {id:"paint",   name:"Tile Paint"},
+    {id:"fill",    name:"Tile Fill"},
+    {id:"road", name:"Draw Road"},
+    {id:"trail", name:"Draw Trail"},
+    {id:"river",   name:"Draw River"},
+    {id:"inspect", name:"Inspect"},
+    {id:"erasepath",name:"Erase path"},
+    {id:"erase",   name:"Erase tile"}
   ];
   const HINTS={
     paint:"Drag to paint · right-click erases",
@@ -1804,8 +1865,7 @@
   TOOLS.forEach(t=>{
     const b=document.createElement("button");
     b.className="tool"; b.type="button"; b.setAttribute("aria-pressed",t.id===tool);
-    b.innerHTML='<svg viewBox="0 0 16 16" stroke-linecap="round" stroke-linejoin="round">'
-      +t.svg+'</svg><span>'+t.name+'</span>';
+    b.innerHTML='<span>'+t.name+'</span>';
     b.onclick=()=>setTool(t.id);
     toolBox.appendChild(b);
   });
@@ -1864,25 +1924,36 @@
     });
   }
   const featBox=document.getElementById("features");
-  FEATURES.forEach(f=>{
-    const b=document.createElement("button");
-    b.className="swatch"; b.type="button"; b.title=f.name;
-    b.setAttribute("aria-pressed",f.id===curF);
-    b.appendChild(chip(62,40,(c,w,h)=>{
-      c.fillStyle=PAPER; c.fillRect(0,0,w,h);
-      GLYPH=INK; GLYPH_BG=PAPER; f.draw(c,w/2,h/2,13);
-    }));
-    const sp=document.createElement("span"); sp.textContent=f.name; b.appendChild(sp);
-    b.onclick=()=>{
-      curF=f.id;
-      [...terrBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
-      [...featBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",FEATURES[n].id===curF));
-      setTool("feature");
-      document.getElementById("hint").textContent=
-        "Click a hex to place "+f.name+" · click again to remove";
-    };
-    featBox.appendChild(b);
-  });
+  function buildFeatureSwatches(){
+    featBox.innerHTML="";
+    FEATURES.forEach(f=>{
+      const b=document.createElement("button");
+      b.className="swatch"; b.type="button"; b.title=f.name;
+      b.setAttribute("aria-pressed",f.id===curF);
+      b.appendChild(chip(62,40,(c,w,h)=>{
+        c.fillStyle=PAPER; c.fillRect(0,0,w,h);
+        GLYPH=INK; GLYPH_BG=PAPER; f.draw(c,w/2,h/2,13);
+      }));
+      const sp=document.createElement("span"); sp.textContent=f.name; b.appendChild(sp);
+      if(f.custom){
+        const del=document.createElement("button");
+        del.className="del"; del.type="button"; del.textContent="\u00d7";
+        del.title="Remove this point of interest";
+        del.onclick=e=>{ e.stopPropagation(); deleteCustomFeat(f.id); };
+        b.appendChild(del);
+      }
+      b.onclick=()=>{
+        curF=f.id;
+        [...terrBox.children].forEach(x=>x.setAttribute("aria-pressed","false"));
+        [...featBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",FEATURES[n].id===curF));
+        setTool("feature");
+        document.getElementById("hint").textContent=
+          "Click a hex to place "+f.name+" · click again to remove";
+      };
+      featBox.appendChild(b);
+    });
+  }
+  buildFeatureSwatches();
 
   const brushI=document.getElementById("brush"), brushO=document.getElementById("brushOut");
   brushI.oninput=()=>{ brush=+brushI.value; brushO.value=[1,7,19][brush]+" hex"+(brush?"es":""); draw(); };
@@ -1975,7 +2046,7 @@
       v:8, cols:S.cols, rows:S.rows,
       title:S.title,
       show:{hexOpacity:S.hexOpacity,coord:S.coord,notes:S.notes,mono:S.mono},
-      custom:S.custom, paths:(S.paths||[]),
+      custom:S.custom, customFeats:S.customFeats||[], paths:(S.paths||[]),
       tiles:TERRAINS.map(t=>t.id), feats:FEATURES.map(f=>f.id),
       terr:Array.from(S.terr), feat:Array.from(S.feat), labels:S.labels, memo:S.memo
     });
@@ -1986,8 +2057,10 @@
     S.rows=Math.max(4,Math.min(40,d.rows|0));
     S.title=d.title||"";
     S.custom=Array.isArray(d.custom) ? d.custom.filter(t=>t&&t.id&&t.base).slice(0,30) : [];
+    S.customFeats=Array.isArray(d.customFeats) ? d.customFeats.filter(t=>t&&t.id&&t.svg).slice(0,30) : [];
     S.paths=Array.isArray(d.paths) ? d.paths.filter(p=>p&&p.hexes&&p.hexes.length>=2) : [];
     rebuildTiles();
+    rebuildFeatures();
     const n=S.cols*S.rows;
     S.terr=new Uint8Array(n); S.feat=new Uint8Array(n); S.labels={}; S.memo={};
     // remap through the saved id lists, so older plates survive list changes
@@ -2073,6 +2146,7 @@
   };
   function syncRail(){
     buildTileSwatches();
+    buildFeatureSwatches();
     colsI.value=colsO.value=S.cols; rowsI.value=rowsO.value=S.rows;
     document.getElementById("title").value=S.title;
 
@@ -2194,6 +2268,77 @@
     if(v) for(let i=0;i<S.terr.length;i++) if(S.terr[i]===v) S.terr[i]=0;
     S.custom=S.custom.filter(t=>t.id!==id);
     rebuildTiles(); buildTileSwatches(); refresh(); store();
+  }
+
+  /* ══════════════ custom points of interest ══════════════ */
+  const featModal=document.getElementById("featModal");
+  let fmSvg=null, fmSvgName="";
+  const FM_PREVIEW_ID="__fmPreview";
+  function fmRefresh(){
+    const cv2=document.getElementById("fmPreview");
+    const c=cv2.getContext("2d"), w=cv2.width, h=cv2.height;
+    c.clearRect(0,0,w,h);
+    c.fillStyle=PAPER; c.fillRect(0,0,w,h);
+    if(fmSvg){ GLYPH=INK; GLYPH_BG=PAPER; drawSvgSymbol(c,w/2,h/2,36,FM_PREVIEW_ID,INK,false); }
+    document.getElementById("fmFileName").textContent = fmSvgName || "Choose an SVG";
+  }
+  document.getElementById("fmPick").onclick=()=>document.getElementById("fmFile").click();
+  document.getElementById("fmDrop").onclick=()=>{
+    fmSvg=null; fmSvgName="";
+    document.getElementById("fmFile").value="";
+    delete SVG_CACHE[FM_PREVIEW_ID];
+    fmRefresh();
+  };
+  document.getElementById("fmFile").onchange=e=>{
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const warn=document.getElementById("fmWarn");
+    if(f.size>96*1024){ warn.textContent="That SVG is over 96 KB — try a simpler one."; return; }
+    const rd=new FileReader();
+    rd.onload=()=>{
+      let txt=String(rd.result);
+      if(txt.indexOf("<svg")<0){ warn.textContent="That file isn't an SVG."; return; }
+      txt=txt.replace(/<script[\s\S]*?<\/script>/gi,"");
+      warn.textContent="";
+      fmSvg=txt; fmSvgName=f.name;
+      loadTileSvg(FM_PREVIEW_ID, txt, fmRefresh);
+    };
+    rd.readAsText(f);
+  };
+  document.getElementById("fmClose").onclick=()=>featModal.classList.remove("on");
+  featModal.addEventListener("pointerdown",e=>{ if(e.target===featModal) featModal.classList.remove("on"); });
+  document.getElementById("newFeat").onclick=()=>{
+    document.getElementById("fmName").value="";
+    document.getElementById("fmWarn").textContent="";
+    document.getElementById("fmFile").value="";
+    fmSvg=null; fmSvgName="";
+    delete SVG_CACHE[FM_PREVIEW_ID];
+    featModal.classList.add("on");
+    fmRefresh();
+    document.getElementById("fmName").focus();
+  };
+  document.getElementById("fmSave").onclick=()=>{
+    const nm=document.getElementById("fmName").value.trim();
+    const warn=document.getElementById("fmWarn");
+    if(!nm){ warn.textContent="Give the point of interest a name."; return; }
+    if(!fmSvg){ warn.textContent="Choose an SVG file."; return; }
+    if(FEATURES.length>=40){ warn.textContent="That is as many points of interest as a sheet can hold."; return; }
+    const id="cf_"+Date.now().toString(36);
+    S.customFeats.push({id, name:nm, svg:fmSvg, svgName:fmSvgName});
+    loadTileSvg(id, fmSvg, ()=>{ buildFeatureSwatches(); refresh(); });
+    rebuildFeatures(); buildFeatureSwatches();
+    curF=id;
+    [...featBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",FEATURES[n].id===curF));
+    featModal.classList.remove("on");
+    setTool("feature");
+    document.getElementById("hint").textContent=
+      "Click a hex to place "+nm+" · click again to remove";
+    refresh(); store();
+  };
+  function deleteCustomFeat(id){
+    const v=F_BY_ID[id];
+    if(v) for(let i=0;i<S.feat.length;i++) if(S.feat[i]===v) S.feat[i]=0;
+    S.customFeats=S.customFeats.filter(t=>t.id!==id);
+    rebuildFeatures(); buildFeatureSwatches(); refresh(); store();
   }
 
   /* ══════════════ notes page ══════════════ */
