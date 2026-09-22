@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Hexlore built-in POI sprite.
+    Each <symbol> uses a 100×100 viewBox; the centre of the icon is at (50,50).
+    Edit this file in Inkscape / Figma / any SVG tool, then run:
+        node update-sprite.js
+    to patch the inline sprite in index.html and see the changes immediately.
+    Rules:
+      • Use fill="black" / stroke="black" — the renderer tints everything to INK.
+      • Transparent areas stay transparent (don't use white fills for cut-outs;
+        use fill-rule="evenodd" compound paths instead).
+      • Keep icons centred at (50,50) with comfortable padding inside the viewBox.
+  -->
+
+  <!-- Town: solid circle -->
+  <symbol id="town" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="21"/>
+  </symbol>
+
+  <!-- City: inner circle + outer ring -->
+  <symbol id="city" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="21"/>
+    <circle cx="50" cy="50" r="36" fill="none" stroke="black" stroke-width="7"/>
+  </symbol>
+
+  <!-- Capitol: outer ring + filled 5-pointed star -->
+  <symbol id="capitol" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="36" fill="none" stroke="black" stroke-width="6"/>
+    <polygon points="50,24 56.5,41 74.7,42 60.5,53.4 65.3,71 50,61 34.7,71 39.5,53.4 25.3,42 43.5,41"/>
+  </symbol>
+
+  <!-- Castle/Keep: open square outline -->
+  <symbol id="keep" viewBox="0 0 100 100">
+    <rect x="29" y="29" width="42" height="42" fill="none" stroke="black" stroke-width="8" stroke-linejoin="miter"/>
+  </symbol>
+
+  <!-- Tower: crenellated battlement + body + arrow-slit cut-out -->
+  <symbol id="tower" viewBox="0 0 100 100">
+    <path fill-rule="evenodd" d="
+      M37,11 h7 v10 h-7 z
+      M46.5,11 h7 v10 h-7 z
+      M56,11 h7 v10 h-7 z
+      M38,20 h24 v55 h-24 z
+      M45,55 h10 v14 h-10 z
+    "/>
+  </symbol>
+
+  <!-- Ruins: filled square -->
+  <symbol id="ruin" viewBox="0 0 100 100">
+    <rect x="29" y="29" width="42" height="42"/>
+  </symbol>
+
+  <!-- Cave: mountain silhouette + filled entrance -->
+  <symbol id="cave" viewBox="0 0 100 100">
+    <polyline points="10,74 21,48 36,33 52,25 67,34 80,49 90,74"
+      fill="none" stroke="black" stroke-width="7.5"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="7" y1="75" x2="93" y2="75"
+      stroke="black" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M38.5,74 Q37.5,52 50,51 Q62.5,52 61.5,74 Z"/>
+  </symbol>
+
+  <!-- Temple: pediment + columns + stylobate -->
+  <symbol id="temple" viewBox="0 0 100 100">
+    <polygon points="12,45 50,21 88,45"/>
+    <rect x="30.5" y="46" width="9"  height="24"/>
+    <rect x="45.5" y="46" width="9"  height="24"/>
+    <rect x="60.5" y="46" width="9"  height="24"/>
+    <rect x="16"   y="70" width="68" height="8"/>
+  </symbol>
+
+  <!-- Camp: tent triangle with inner-triangle cut-out -->
+  <symbol id="camp" viewBox="0 0 100 100">
+    <path fill-rule="evenodd" d="M50,21 L80,75 L20,75 Z  M50,43 L59,75 L41,75 Z"/>
+  </symbol>
+
+  <!-- Bridge: arch span + water wave -->
+  <symbol id="bridge" viewBox="0 0 100 100">
+    <path fill-rule="evenodd" d="
+      M8,5 H92 V55 H78 V15 C78,40 22,40 22,15 V55 H8 Z
+      M22,15 H78 C78,40 22,40 22,15 Z
+    "/>
+    <path d="M5,72 Q18,60 30,72 Q43,84 56,72 Q68,60 80,72 Q88,67 95,70"
+      fill="none" stroke="black" stroke-width="7" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Harbour: mast + boom + sail arc -->
+  <symbol id="port" viewBox="0 0 100 100">
+    <circle cx="50" cy="26" r="7.5" fill="none" stroke="black" stroke-width="7.5"/>
+    <line x1="50" y1="34" x2="50" y2="77" stroke="black" stroke-width="7.5" stroke-linecap="round"/>
+    <line x1="34" y1="43" x2="66" y2="43" stroke="black" stroke-width="7.5" stroke-linecap="round"/>
+    <path d="M26,58 Q50,92 74,58" fill="none" stroke="black" stroke-width="7.5" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Mine: crossed picks -->
+  <symbol id="mine" viewBox="0 0 100 100">
+    <line x1="26" y1="75" x2="74" y2="30" stroke="black" stroke-width="8" stroke-linecap="round"/>
+    <line x1="74" y1="75" x2="26" y2="30" stroke="black" stroke-width="8" stroke-linecap="round"/>
+    <path d="M18,36 Q29,20 42,26" fill="none" stroke="black" stroke-width="8" stroke-linecap="round"/>
+    <path d="M82,36 Q71,20 58,26" fill="none" stroke="black" stroke-width="8" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Battle: crossed swords with guards -->
+  <symbol id="battle" viewBox="0 0 100 100">
+    <line x1="23" y1="77" x2="74" y2="25" stroke="black" stroke-width="6.5" stroke-linecap="round"/>
+    <line x1="77" y1="77" x2="26" y2="25" stroke="black" stroke-width="6.5" stroke-linecap="round"/>
+    <line x1="20" y1="60" x2="41" y2="80" stroke="black" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="80" y1="60" x2="59" y2="80" stroke="black" stroke-width="5.5" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Landmark: 8-pointed star -->
+  <symbol id="mark" viewBox="0 0 100 100">
+    <polygon points="50,19 58.5,41.5 81,50 58.5,58.5 50,81 41.5,58.5 19,50 41.5,41.5"/>
+  </symbol>
+
+</svg>
