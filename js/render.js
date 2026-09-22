@@ -15,6 +15,7 @@
                            tool
      symbols.js            SYM_SHIFT, SYM_SQUASH
      terrains.js           PAPER_INK, TERRAINS
+     lore.js               syncLore (loads later; refresh() guards the call with typeof)
    -------------------------------------------------------------------------- */
 "use strict";
 
@@ -329,7 +330,7 @@ function paint(c,ppm,L){
 /* the plate is painted into a buffer; cursor motion only recomposites it */
 let baseCv=null, baseCtx=null, dirty=true;
 /* Mark the plate buffer stale and redraw. Use this after any change to S. */
-function refresh(){ dirty=true; draw(); }
+function refresh(){ dirty=true; draw(); if(typeof syncLore==="function") syncLore(); }
 
 /* Composite the cached plate buffer, then overlay screen-only cursor, selection and path preview. */
 function draw(){

@@ -66,6 +66,9 @@ header{
 .version{font:400 11px/1 "IBM Plex Mono",monospace;color:var(--dimmer);
   letter-spacing:.06em;align-self:flex-end;padding-bottom:2px}
 header .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+/* rail width (292px) minus the header's left padding (16px) and its gap (14px),
+   so the tab strip starts exactly where the stage does */
+header .brand{display:flex;align-items:center;gap:14px;flex:0 0 auto;width:262px;min-width:max-content}
 
 main{flex:1 1 auto; display:flex; min-height:0}
 #rail{flex:0 0 292px; overflow-y:auto; background:var(--panel);
@@ -80,6 +83,40 @@ main{flex:1 1 auto; display:flex; min-height:0}
 #plate{display:block; height:auto; border-radius:1px;
   box-shadow:0 1px 0 rgba(255,255,255,.14), 0 18px 44px -12px rgba(0,0,0,.85);
   cursor:crosshair; touch-action:none}
+
+/* --- The Lore tab ---
+   body[data-view] picks which of the stage and the Lore page is showing, and
+   which half of the rail. lore.js flips the attribute; nothing else does. */
+body[data-view="lore"] #stage, body[data-view="lore"] #rail .v-map,
+body[data-view="map"] #lore,   body[data-view="map"] #rail .v-lore{display:none}
+body[data-view="lore"] .zoom{visibility:hidden}
+
+#lore{flex:1 1 auto; min-width:0; overflow-y:auto; padding:28px 36px 48px; background:var(--ink)}
+#lore::-webkit-scrollbar{width:9px}
+#lore::-webkit-scrollbar-thumb{background:var(--edge);border-radius:9px}
+
+/* masthead: echoes the plate's own title band */
+.lore-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid var(--edge);max-width:1100px}
+.lore-title{margin:0;font:600 30px/1.1 "Bodoni Moda",Didot,serif;color:var(--text)}
+.lore-count{font:500 11.5px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dimmer)}
+
+.lore-list{display:grid;grid-template-columns:1fr;gap:22px;align-items:start;max-width:1100px}
+#lore[data-cols="2"] .lore-list{grid-template-columns:1fr 1fr}
+
+.lore-entry{background:var(--panel2);border:1px solid var(--dim);border-radius:6px;
+  padding:24px 26px;display:flex;flex-direction:column;gap:12px;cursor:pointer;
+  transition:border-color .15s}
+.lore-entry:hover,.lore-entry:focus-visible{border-color:var(--accent);outline:none}
+.lore-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.lore-gc{font:600 22px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;color:var(--text)}
+.lore-name{font:500 17px/1.2 "Archivo",system-ui,sans-serif;color:var(--text)}
+.lore-meta{font:400 12.5px/1.3 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim)}
+.lore-txt{margin:0;font:400 17.5px/1.85 "Archivo",system-ui,sans-serif;color:#F2F7F3;
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.lore-empty{margin:0;color:var(--dimmer);font:400 15px/1.6 "IBM Plex Mono",monospace;grid-column:1/-1}
 
 footer{flex:0 0 auto; display:flex; gap:18px; align-items:center;
   padding:8px 16px; background:var(--panel); border-top:1px solid var(--edge);
@@ -118,6 +155,26 @@ footer .hint{overflow:hidden;text-overflow:ellipsis}
   font:500 11.5px/1.2 "IBM Plex Mono",monospace;color:var(--accent);
   border-left:1px solid var(--edge-soft);border-right:1px solid var(--edge-soft)}
 .zoom .fit{border-left:1px solid var(--edge-soft);font-size:11.5px;padding:6px 8px}
+
+/* the Hexmap / Lore view switch: folder tabs standing on the header's bottom
+   rule. The strip is pulled down over the header padding and border (8px + 1px)
+   so the active tab's own bottom edge replaces the rule and it appears to open
+   into the page below. */
+.tabs{display:flex;align-items:flex-end;gap:4px;align-self:flex-end;margin-bottom:-8px;margin-left:20px}
+/* inactive tabs have a subtle raised background so the active tab's ink background stands out.
+   text is full strength on both states so neither reads as disabled */
+.tabs button{position:relative;cursor:pointer;padding:10px 20px 11px;min-width:80px;
+  background:#19331E;color:var(--text);border:0;border-radius:8px 8px 0 0;
+  font:500 13.5px/1 "Archivo",system-ui,sans-serif;letter-spacing:.02em;
+  transition:background .12s}
+.tabs button:hover{background:#1F3E25}
+/* the open tab: a 2px accent stroke drawn inside the shape (top and sides only),
+   and one extra pixel of its own background covering the header rule so it
+   opens into the page below */
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;margin-bottom:-1px;padding-bottom:12px;
+  box-shadow:inset 0 2px 0 var(--accent),inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
+/* on the map the stage starts a shade lighter than the ink, so match the seam */
+body[data-view="map"] .tabs button[aria-pressed="true"]{background:#0F1F13}
 
 .grp{padding:10px 14px 12px}
 .grp h2{margin:0 0 10px; font:500 11.5px/1 "IBM Plex Mono",monospace;
@@ -205,16 +262,36 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
 #insp .igrow{flex:1 1 auto;min-height:0}
 #insp .igrow textarea{flex:1 1 auto;min-height:34vh;resize:none;
   line-height:1.65;font-size:15.5px}
-#insp .ifoot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#insp .ifoot{display:flex;align-items:center;gap:16px;justify-content:space-between}
 #insp .ifoot .btn{font-size:13.5px;padding:9px 14px}
-#insp .ibtn-save{background:#185C36;border-color:#268A50;color:#fff;font-weight:600}
+#insp .ibtn-save{background:#185C36;border-color:#268A50;color:#fff;font-weight:600;min-width:120px}
 #insp .ibtn-save:hover{background:#1D7041;border-color:#2EA85F}
 #insp .ihelp{font:400 12px/1.4 "IBM Plex Mono",monospace;color:var(--dimmer)}
 
 /* custom tile / POI editor */
-#tileModal, #featModal{position:fixed;inset:0;z-index:45;display:none;
+#importModal, #tileModal, #featModal{position:fixed;inset:0;z-index:45;display:none;
   background:rgba(4,10,5,.82);padding:4vh 4vw}
-#tileModal.on, #featModal.on{display:flex;align-items:center;justify-content:center}
+#importModal.on, #tileModal.on, #featModal.on{display:flex;align-items:center;justify-content:center}
+#importModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:480px;
+  max-height:92vh;background:var(--panel);border:1px solid var(--edge);
+  border-radius:7px;box-shadow:0 30px 80px -20px #000;overflow:hidden}
+#importModal .tmhd{display:flex;align-items:center;gap:16px;padding:14px 20px;
+  background:var(--panel2);border-bottom:1px solid var(--edge)}
+#importModal .tmhd b{font:600 16px/1 "Archivo",sans-serif}
+#importModal .tmhd .btn{margin-left:auto}
+#importModal .tmbody{display:flex;flex-direction:column;gap:16px;padding:20px;overflow-y:auto}
+#importModal .ifield{display:flex;flex-direction:column;gap:7px}
+#importModal .ifield>span{font:500 11px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.im-file-item{padding:8px 10px;border-radius:var(--r);cursor:pointer;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13px;border:1px solid var(--edge);background:var(--bg)}
+.im-file-item:hover{background:var(--panel2)}
+.im-empty{font-size:13px;color:var(--dim);font-style:italic}
+.im-section-hd{font:500 10px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.im-section-gap{margin-top:14px}
+.im-icon{margin-right:7px;opacity:.55;font-size:11px}
 #tileModal .tmsheet, #featModal .tmsheet{display:flex;flex-direction:column;width:100%;max-width:520px;
   max-height:92vh;background:var(--panel);border:1px solid var(--edge);
   border-radius:7px;box-shadow:0 30px 80px -20px #000;overflow:hidden}
@@ -269,8 +346,12 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
   #rail{flex:0 0 auto;max-height:42vh;border-right:0;border-bottom:1px solid var(--edge)}
   #stage{padding:10px}
   header{flex-wrap:wrap;gap:8px 12px}
+  header .brand{width:auto}
+  .tabs{order:1;flex:1 1 100%;margin-bottom:-8px;padding-top:2px}
   #insp{padding:0}
   #insp .isheet{border-radius:0;border:0;max-width:none}
+  #lore{padding:14px}
+  #lore[data-cols="2"] .lore-list{grid-template-columns:1fr}
 }
 
 /* ==========================================================================
@@ -283,9 +364,49 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
 /* the plate IS an A4 sheet, so printing lays it on the page 1:1 */
 @media print{
   body{background:#fff;overflow:visible;display:block}
-  header,#rail,footer,#insp{display:none!important}
+  header,#rail,footer,#insp,.gen-panel{display:none!important}
   main{display:block}
   #stage{padding:0;overflow:visible;background:#fff;display:block}
   #plate{box-shadow:none;border-radius:0;
     width:var(--pw)!important;height:var(--ph)!important}
+
+  /* the Lore tab prints as a portrait document: lore.js swaps the @page rule
+     through #pageRule, these rules turn the dark screen page into ink on paper */
+  body[data-view="lore"]{height:auto}
+  body[data-view="lore"] #stage{display:none}
+  body[data-view="lore"] #lore{display:block;overflow:visible;padding:0;background:#fff;color:#000}
+  #lore .lore-head{max-width:none;border-bottom:.4mm solid #000;margin-bottom:8mm;padding-bottom:3mm}
+  #lore .lore-title{color:#000;font-size:22pt}
+  #lore .lore-count{color:#333}
+  /* multicol rather than grid, so column one fills before column two on each page */
+  #lore .lore-list{display:block;column-count:1;column-gap:8mm;max-width:none}
+  #lore[data-cols="2"] .lore-list{column-count:2}
+  #lore .lore-entry{break-inside:avoid;page-break-inside:avoid;background:none;
+    border:.25mm solid #666;border-radius:0;margin:0 0 7mm;padding:6mm 7mm;color:#000;display:block}
+  #lore .lore-hd{margin-bottom:2mm}
+  #lore .lore-gc{font-size:15pt;color:#000}
+  #lore .lore-name{font-size:13pt;color:#000}
+  #lore .lore-meta{margin-bottom:2.5mm;color:#444;font-size:11pt}
+  #lore .lore-txt{font-size:13pt;line-height:1.7;color:#000}
 }
+
+/* ---- random-map settings popover -------------------------------------------
+   Anchored under the header gear button by mapgen.js; fixed so header overflow
+   cannot clip it. Rows reuse .row so it matches the rail. */
+.gen-panel{position:fixed;z-index:44;display:none;width:312px;padding:14px 16px 16px;
+  max-height:calc(100vh - 64px);overflow-y:auto;
+  background:var(--panel);border:1px solid var(--edge);border-radius:6px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.gen-panel.on{display:block}
+.gen-panel .ghd{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.gen-panel .ghd h2{margin:0;flex:1;font:500 11.5px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.gen-panel .ghd .btn{font-size:12px;padding:4px 9px}
+.gen-panel .row label{flex:0 0 100px}
+.gen-panel .row output{min-width:38px;text-align:right}
+.gen-panel select{flex:1;background:#0C1A10;color:var(--text);border:1px solid var(--edge);
+  border-radius:var(--r);padding:5px 6px;font:inherit;font-size:13px}
+.gen-panel .note{margin-top:12px}
+.gen-group{margin-top:12px;padding-top:10px;border-top:1px solid var(--edge-soft)}
+.gen-group-hd{font:500 10.5px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:8px;margin-top:-4px}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hexlore — A4 hex plate cartography</title>
+    <title>Hexlore</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,13 +13,18 @@
     />
 
     <link rel="stylesheet" href="css/styles.css" />
+    <!-- lore.js writes the Lore tab's portrait @page rule here; empty means the
+         stylesheet's landscape rule applies, so the map prints as before -->
+    <style id="pageRule"></style>
 
   </head>
 
-  <body>
+  <body data-view="map">
 <header>
+  <!-- the brand block is as wide as the rail, so the tabs begin over the stage -->
+  <div class="brand">
   <div class="wordmark">Hex<em>lore</em></div>
-  <span class="version">v0.2</span>
+  <span class="version">v0.3</span>
   <a
     href="https://ko-fi.com/smilingdmrpg"
     target="_blank"
@@ -32,6 +37,11 @@
     title="Support Hexlore on Ko-fi"
     >☕ Ko-fi</a
   >
+  </div>
+  <nav class="tabs" id="tabs" aria-label="View">
+    <button type="button" data-view="map" aria-pressed="true" title="Hex map editor (N)">Hexmap</button>
+    <button type="button" data-view="lore" aria-pressed="false" title="Lore: every annotated hex (N)">Lore</button>
+  </nav>
   <div class="acts">
     <div class="zoom">
       <button id="zOut" title="Zoom out (−)">&minus;</button>
@@ -39,16 +49,17 @@
       <button id="zIn" title="Zoom in (+)">+</button>
       <button class="fit" id="zFit" title="Fit the sheet to the window (0)">Fit</button>
     </div>
-    <button class="btn" id="notesBtn" title="View all hex notes (N)">Notes</button>
+    <button class="btn" id="gen" title="Fill the sheet with a random kingdom">Generate Map</button>
+    <button class="btn" id="genOpts" title="Random map settings" aria-haspopup="true" aria-expanded="false">&#9881;</button>
     <button class="btn" id="open">Import</button>
     <button class="btn" id="save">Save file</button>
     <button class="btn" id="png">Export PNG</button>
-    <button class="btn key" id="print">Print A4</button>
   </div>
 </header>
 
 <main>
   <div id="rail">
+  <div class="v-map">
     <div class="grp">
       <h2>Title</h2>
       <div style="display:flex;gap:6px;align-items:center">
@@ -112,7 +123,7 @@
       <div class="stack"><button class="btn" id="newFeat">+ New point of interest</button></div>
     </div>
 
-    <div class="grp" style="border-bottom:0">
+    <div class="grp">
       <h2>Show</h2>
       <div class="row" style="margin-top:0">
         <label for="hexOpacity" style="flex:0 0 80px;font-size:13.5px;color:var(--dim)">Hex opacity</label>
@@ -131,8 +142,40 @@
     </div>
   </div>
 
+  <!-- Lore tab controls: shown in place of the map groups while the Lore view is active -->
+  <div class="v-lore">
+    <div class="grp">
+      <h2>Layout</h2>
+      <div class="row" style="margin-top:0">
+        <label>Columns</label>
+        <div class="seg" id="loreCols">
+          <button type="button" data-cols="1" aria-pressed="false">One</button>
+          <button type="button" data-cols="2" aria-pressed="true">Two</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print button: available from both map and Lore views -->
+  <div class="grp" style="border-bottom:0">
+    <div class="stack"><button class="btn key" id="print">Print Lore</button></div>
+  </div>
+  </div>
+
   <div id="stage"><canvas id="plate"></canvas></div>
+
+  <section id="lore" data-cols="2">
+    <!-- divs, not <header>: the page-wide header rules would restyle and unprint them -->
+    <div class="lore-head">
+      <h1 class="lore-title" id="loreTitle"></h1>
+      <span class="lore-count" id="loreCount"></span>
+    </div>
+    <div class="lore-list" id="loreBody"></div>
+  </section>
 </main>
+
+<!-- random-map settings popover; mapgen.js fills the rows and anchors it under the header gear button -->
+<div id="genPanel" class="gen-panel" role="dialog" aria-label="Random map settings"></div>
 
 <div id="insp">
   <div class="isheet">
@@ -144,9 +187,11 @@
       <button class="btn" id="iClose">Close</button>
     </div>
     <div class="ibody">
-      <label class="ifield"
-        ><span>Place name</span> <input type="text" id="iName" maxlength="48" placeholder="unnamed"
-      /></label>
+      <label class="ifield" style="display:flex;gap:6px;align-items:flex-end">
+        <span style="flex:0 0 auto">Place name</span>
+        <input type="text" id="iName" maxlength="48" placeholder="unnamed" style="flex:1;min-width:0" />
+        <button class="btn" id="iRandName" title="Generate a random name" style="flex:0 0 auto;font-size:16px;padding:5px 8px">⚄</button>
+      </label>
       <label class="ifield igrow"
         ><span>Notes</span>
         <textarea
@@ -157,13 +202,30 @@
       </label>
       <div class="ifoot">
         <button class="btn ibtn-save" id="iSave">Save</button>
-        <button class="btn ibtn-wipe" id="iWipe">Clear this hex</button>
         <span class="ihelp">Esc to close</span>
       </div>
     </div>
   </div>
 </div>
 
+<div id="importModal">
+  <div class="tmsheet">
+    <div class="tmhd">
+      <b>Import map</b>
+      <button class="btn" id="imClose">Close</button>
+    </div>
+    <div class="tmbody">
+      <div class="ifield">
+        <span>Map library</span>
+        <div id="imFileList"></div>
+      </div>
+      <div class="ifield">
+        <span>Or browse anywhere</span>
+        <button class="btn" id="imBrowse">Browse files…</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="tileModal">
   <div class="tmsheet">
     <div class="tmhd">
@@ -231,30 +293,6 @@
       </div>
     </div>
   </div>
-</div>
-<div
-  id="notesPage"
-  style="display:none;position:fixed;inset:0;z-index:50;
-  background:var(--ink);flex-direction:column;"
->
-  <div
-    style="display:flex;align-items:center;gap:16px;padding:14px 22px;
-    border-bottom:1px solid var(--edge);background:var(--panel);flex:0 0 auto"
-  >
-    <div style="font:600 22px/1 'Bodoni Moda',Didot,serif"
-      >Hex<em style="font-style:italic;font-weight:400">lore</em>&ensp;<span
-        style="font:400 14px/1 'IBM Plex Mono',monospace;color:var(--dimmer);letter-spacing:.08em;vertical-align:middle"
-        >NOTES</span
-      ></div
-    >
-    <button class="btn" id="notesClose" style="margin-left:auto">Close</button>
-  </div>
-  <div
-    id="notesBody"
-    style="flex:1 1 auto;overflow-y:auto;padding:24px 28px;
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;
-    align-content:start"
-  ></div>
 </div>
 <svg id="feature-sprite" style="display:none">
   <!-- Generated from assets/features.svg — run "node update-sprite.js" to refresh -->
@@ -342,7 +380,6 @@
       Load order matters. These are plain scripts sharing one scope, not
       modules, so each file may rely on anything declared in the files above
       it. main.js must stay last: it is the only one that starts the app.
-      build.js inlines them in exactly this order.
     -->
     <script src="js/palette.js"></script>
     <script src="js/symbols.js"></script>
@@ -357,10 +394,13 @@
     <script src="js/pointer.js"></script>
     <script src="js/inspector.js"></script>
     <script src="js/rail.js"></script>
+    <script src="js/mapgen-config.js"></script>
+    <script src="js/mapgen.js"></script>
+    <script src="js/examples.js"></script>
     <script src="js/exporting.js"></script>
     <script src="js/custom-tiles.js"></script>
     <script src="js/custom-features.js"></script>
-    <script src="js/notes-page.js"></script>
+    <script src="js/lore.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/keys.js"></script>
     <script src="js/main.js"></script>

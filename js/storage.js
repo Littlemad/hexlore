@@ -21,13 +21,15 @@ function store(){
 }
 /* Invent a plate title, so a new sheet is never called nothing. */
 function randName(){
-  const adj=["Ashen","Crimson","Iron","Silent","Hollow","Sunken","Broken","Grey",
-              "Ancient","Blighted","Faded","Bitter","Wandering","Forsaken","Dark",
-              "Scarred","Lost","Pale","Storm","Ember"];
-  const noun=["Reach","Vale","Moor","Crossing","Expanse","Waste","Fen","Marches",
-               "Shore","Downs","Pass","Hold","Hollow","Basin","Heath","Strand",
-               "Peaks","Crown","Gate","Brink"];
-  const prefix=["The ","The ","","","The ",""];
+  const adj=["Ashen","Crimson","Iron","Silent","Hollow","Sunken","Broken","Grey","Ancient","Blighted",
+             "Faded","Bitter","Wandering","Forsaken","Dark","Scarred","Lost","Pale","Storm","Ember",
+             "Golden","Silver","Bronze","Shattered","Frozen","Burning","Mystic","Sacred","Cursed","Wild",
+             "Fair","Tall","Deep","High","Low","Narrow","Broad","Swift","Slow","Bright","Dim","Clear","Hidden"];
+  const noun=["Reach","Vale","Moor","Crossing","Expanse","Waste","Fen","Marches","Shore","Downs",
+              "Pass","Hold","Hollow","Basin","Heath","Strand","Peaks","Crown","Gate","Brink",
+              "Haven","Harbor","Port","Bay","Cove","Inlet","Delta","River","Spring","Well","Lake",
+              "Mill","Bridge","Tower","Keep","Fort","Camp","Helm","Hall","House","Wood","Forest","Grove"];
+  const prefix=["The ","The ","","","The ","","The ",""];
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   return pick(prefix)+pick(adj)+" "+pick(noun);
 }

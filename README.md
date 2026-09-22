@@ -9,17 +9,17 @@ bundler beyond a 60-line build script.
 ## Layout
 
 ```
-index.html              development entry point — markup, and the load order
+index.html              the app — markup, inline POI sprite, and the load order
 css/styles.css          all the CSS, in seven numbered sections
-js/                     20 modules, loaded in order; see below
-build.js                inlines everything into dist/index.html
-dist/index.html         generated — do not edit
+js/                     21 modules, loaded in order; see below
+assets/features.svg     editable source for the built-in POI icons
+map/                    example save files (.hexplate.json)
 .claude/skills/hexlore/ project skill: how to work on this without reading it all
 ```
 
 `js/` in load order: `palette`, `symbols`, `terrains`, `features`, `state`,
 `geometry`, `render`, `zoom`, `history`, `edits`, `pointer`, `inspector`,
-`rail`, `exporting`, `custom-tiles`, `custom-features`, `notes-page`,
+`rail`, `mapgen`, `exporting`, `custom-tiles`, `custom-features`, `lore`,
 `storage`, `keys`, `main`.
 
 Every module opens with a header saying what it is for and which names it
@@ -36,15 +36,20 @@ required. A server is still nicer if you want live reload:
 npx serve .
 ```
 
-To publish as a Claude artifact, which has to be a single self-contained file:
+### Changing the built-in POI icons
 
-```
-node build.js          # writes dist/index.html
-```
+The point-of-interest icons (Town, Castle, Ruins, etc.) live in an `<svg
+id="feature-sprite">` block near the bottom of `index.html`. Each icon is a
+`<symbol>` element with a `100×100` viewBox centred at `(50, 50)`. Edit them
+directly in `index.html`, or open `assets/features.svg` in a vector editor,
+swap the shapes there, then copy the updated `<symbol>` elements back.
 
-`build.js` inlines each stylesheet and script in the order `index.html` lists
-them, with no minification or transformation, so the built page behaves exactly
-like the development page. Rebuild before every publish.
+Rules for replacement icons:
+- Use only black fills and strokes — the renderer tints everything to the map
+  ink colour at draw time.
+- Use `fill-rule="evenodd"` compound paths for cut-outs (e.g. an arrow slit in
+  a tower); white fills will be tinted solid and disappear into the body.
+- Keep the icon centred at `(50, 50)` with comfortable padding.
 
 ## How it is wired
 
@@ -62,18 +67,6 @@ If you later want real modules, the path is: add `type="module"` to the script
 tags, then add explicit `export` and `import` lines guided by the `Uses:` list
 already in each file header. Everything needed to do it mechanically is
 documented; it is just a larger change than the split itself was.
-
-## Notes on the split
-
-The JavaScript is character-for-character the original, apart from indentation
-and added comments. The CSS is the original 122 rules, regrouped by concern but
-with the cascade order of every repeated selector preserved.
-
-One intentional change: the page now declares `<!doctype html>`, which the
-single-file version did not. This puts the browser in standards mode rather
-than quirks mode. Everything here already sets `box-sizing` and explicit
-heights, so it should render identically, but it is the one thing worth
-eyeballing side by side.
 
 `window.storage` only exists inside the Claude artifact runtime. Running
 locally, `store()` is a no-op and nothing persists between reloads — that is

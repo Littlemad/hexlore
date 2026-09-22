@@ -18,6 +18,7 @@
      storage.js            store
      terrains.js           TERRAINS, T_BY_ID, rebuildTiles
      zoom.js               fitPpm, showZoom
+     lore.js               view (loads later; the print handlers guard it with typeof)
    -------------------------------------------------------------------------- */
 "use strict";
 
@@ -38,8 +39,10 @@ document.getElementById("png").onclick=()=>{
   dl(off.toDataURL("image/png"), slug()+"-a4-300dpi.png");
 };
 document.getElementById("print").onclick=()=>window.print();
-window.addEventListener("beforeprint",()=>{ printing=true; PAPER=PAPER_PRINT; PAPERLINE=PAPERLINE_PRINT; GLYPH_BG=PAPER; refresh(); });
-window.addEventListener("afterprint",()=>{ printing=false; PAPER=PAPER_SCREEN; PAPERLINE=PAPERLINE_SCREEN; GLYPH_BG=PAPER; refresh(); });
+/* True while the Lore tab is showing: printing then lays out the page, not the plate, so the 300 dpi repaint is skipped. */
+function loreShowing(){ return typeof view!=="undefined" && view==="lore"; }
+window.addEventListener("beforeprint",()=>{ if(loreShowing()) return; printing=true; PAPER=PAPER_PRINT; PAPERLINE=PAPERLINE_PRINT; GLYPH_BG=PAPER; refresh(); });
+window.addEventListener("afterprint",()=>{ if(loreShowing()) return; printing=false; PAPER=PAPER_SCREEN; PAPERLINE=PAPERLINE_SCREEN; GLYPH_BG=PAPER; refresh(); });
 
 /* Serialise the plate to the .hexplate.json save format (version 8). */
 function serialise(){
@@ -48,6 +51,7 @@ function serialise(){
     title:S.title,
     show:{hexOpacity:S.hexOpacity,coord:S.coord,notes:S.notes,mono:S.mono},
     custom:S.custom, customFeats:S.customFeats||[], paths:(S.paths||[]),
+    gen:S.gen||GEN_DEFAULTS,
     tiles:TERRAINS.map(t=>t.id), feats:FEATURES.map(f=>f.id),
     terr:Array.from(S.terr), feat:Array.from(S.feat), labels:S.labels, memo:S.memo
   });
@@ -76,6 +80,21 @@ function hydrate(d){
   for(const k in (d.memo||{}))   if(+k<n) S.memo[k]=String(d.memo[k]).slice(0,1200);
   if(d.show){ S.hexOpacity=d.show.hexOpacity!==undefined?+d.show.hexOpacity:72;
               S.coord=!!d.show.coord; S.notes=d.show.notes!==false; S.mono=!!d.show.mono; }
+  // random-map settings: unknown keys are dropped, numbers clamped, older files get the defaults
+  S.gen=Object.assign({},GEN_DEFAULTS);
+  const gsrc=Object.assign({},d.gen);
+  // earlier plates stored land instead of sea, and one water slider for both lakes and rivers
+  if(gsrc.sea===undefined&&gsrc.land!==undefined) gsrc.sea=100-(+gsrc.land||0);
+  if(gsrc.water!==undefined){ if(gsrc.lakes===undefined) gsrc.lakes=gsrc.water;
+                              if(gsrc.rivers===undefined) gsrc.rivers=gsrc.water; }
+  // migrate old "random" to "Standard" for climate and coast
+  if(gsrc.climate==="random") gsrc.climate="Standard";
+  if(gsrc.coast==="random") gsrc.coast="Standard";
+  if(d.gen&&typeof d.gen==="object") for(const k in GEN_DEFAULTS){
+    const v=gsrc[k]; if(v===undefined) continue;
+    if(typeof GEN_DEFAULTS[k]==="number"){ if(isFinite(+v)) S.gen[k]=Math.max(0,Math.min(100,Math.round(+v))); }
+    else if(typeof v==="string"&&v.length<20) S.gen[k]=v;
+  }
   sel=null;
 }
 let toastTmr=null;
@@ -105,7 +124,87 @@ document.getElementById("save").onclick=async()=>{
      importedFileName||slug()+".hexplate.json");
 };
 
-document.getElementById("open").onclick=async()=>{
+/* --- Map library (localStorage cache of imported files) --- */
+function _libraryLoad(){
+  try{ return JSON.parse(localStorage.getItem("hexlore:library")||"[]"); }catch(e){ return []; }
+}
+function _librarySave(name, text){
+  try{
+    let lib=_libraryLoad().filter(e=>e.name!==name);
+    lib.unshift({name, text, saved:Date.now()});
+    if(lib.length>10) lib=lib.slice(0,10);
+    localStorage.setItem("hexlore:library", JSON.stringify(lib));
+  }catch(e){}
+}
+
+/* Parse, hydrate and sync — the shared path for all import flows. */
+function doImport(text, filename, handle){
+  try{
+    push(); hydrate(JSON.parse(text)); syncRail(); closeInspector();
+    if(autoFit){ ppmView=fitPpm(); showZoom(); }
+    refresh(); store();
+    importedFileHandle=handle;
+    importedFileName=filename;
+    document.getElementById("hint").textContent="Opened "+filename;
+    _librarySave(filename, text);
+    closeImportDialog();
+  }catch(err){
+    document.getElementById("hint").textContent="That file isn’t a hex plate — expected .hexplate.json";
+  }
+}
+
+/* --- Import dialog --- */
+function _refreshMapLibrary(){
+  const list=document.getElementById("imFileList");
+  list.innerHTML="";
+
+  const lib=_libraryLoad();
+  const libNames=new Set(lib.map(e=>e.name));
+  if(lib.length){
+    lib.forEach(entry=>{
+      const d=document.createElement("div");
+      d.className="im-file-item"; d.title=entry.name;
+      d.innerHTML='<span class="im-icon">⬡</span>'+entry.name;
+      d.onclick=()=>doImport(entry.text, entry.name, null);
+      list.appendChild(d);
+    });
+  }
+
+  const examples=typeof EXAMPLE_MAPS!=="undefined"
+    ? EXAMPLE_MAPS.filter(ex=>!libNames.has(ex.name)) : [];
+  if(examples.length){
+    const hd=document.createElement("div");
+    hd.className="im-section-hd im-section-gap"; hd.textContent="Examples"; list.appendChild(hd);
+    examples.forEach(ex=>{
+      const d=document.createElement("div");
+      d.className="im-file-item"; d.title=ex.name;
+      d.innerHTML='<span class="im-icon">⬡</span>'+ex.name;
+      d.onclick=()=>doImport(ex.text, ex.name, null);
+      list.appendChild(d);
+    });
+  }
+
+  if(!list.children.length){
+    const s=document.createElement("span");
+    s.className="im-empty";
+    s.textContent="No maps yet — use Browse to import one";
+    list.appendChild(s);
+  }
+}
+function openImportDialog(){
+  document.getElementById("importModal").classList.add("on");
+  _refreshMapLibrary();
+}
+function closeImportDialog(){
+  document.getElementById("importModal").classList.remove("on");
+}
+
+document.getElementById("open").onclick=()=>openImportDialog();
+document.getElementById("imClose").onclick=()=>closeImportDialog();
+document.getElementById("importModal").onclick=(e)=>{
+  if(e.target===document.getElementById("importModal")) closeImportDialog();
+};
+document.getElementById("imBrowse").onclick=async()=>{
   if(window.showOpenFilePicker){
     try{
       const [handle]=await window.showOpenFilePicker({
@@ -113,36 +212,14 @@ document.getElementById("open").onclick=async()=>{
         multiple:false
       });
       const f=await handle.getFile();
-      const text=await f.text();
-      try{
-        push(); hydrate(JSON.parse(text)); syncRail(); closeInspector();
-        if(autoFit){ ppmView=fitPpm(); showZoom(); }
-        refresh(); store();
-        importedFileHandle=handle;
-        importedFileName=f.name;
-        document.getElementById("hint").textContent="Opened "+f.name;
-      }catch(err){
-        document.getElementById("hint").textContent="That file isn’t a hex plate — expected .hexplate.json";
-      }
-      return;
+      doImport(await f.text(), f.name, handle); return;
     }catch(e){}
   }
   const inp=document.createElement("input"); inp.type="file"; inp.accept=".json,application/json";
   inp.onchange=()=>{
     const f=inp.files&&inp.files[0]; if(!f) return;
     const rd=new FileReader();
-    rd.onload=()=>{
-      try{
-        push(); hydrate(JSON.parse(rd.result)); syncRail(); closeInspector();
-        if(autoFit){ ppmView=fitPpm(); showZoom(); }
-        refresh(); store();
-        importedFileHandle=null;
-        importedFileName=f.name;
-        document.getElementById("hint").textContent="Opened "+f.name;
-      }catch(err){
-        document.getElementById("hint").textContent="That file isn’t a hex plate — expected .hexplate.json";
-      }
-    };
+    rd.onload=()=>doImport(rd.result, f.name, null);
     rd.readAsText(f);
   };
   inp.click();
@@ -160,5 +237,6 @@ function syncRail(){
   hexOpSlider.value=S.hexOpacity!==undefined?S.hexOpacity:72;
   hexOpOut.textContent=hexOpSlider.value+"%";
   brushO.value=[1,7,19][brush]+" hex"+(brush?"es":"");
+  if(typeof syncGenPanel==="function") syncGenPanel();
   showZoom();
 }

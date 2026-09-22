@@ -14,10 +14,14 @@ const M=11, HEAD=20;               // page margin, masthead band
 const DPMM_PRINT=300/25.4;         // 300 dpi
 const DPMM_CSS=96/25.4;            // 1 CSS pixel per mm at 100% zoom
 
+/* Random-map settings: percentages 0..100 plus two choices. Saved with the plate; mapgen.js reads them. */
+const GEN_DEFAULTS={ sea:30, mountains:50, forest:50, lakes:40, rivers:50, desert:20, poi:50, roads:50,
+                     climate:"Standard", coast:"Standard" };
 const S = {
   cols:20, rows:14, orient:"pointy",
   title:"", scale:"",
   hexOpacity:72, coord:true, notes:true, mono:false, custom:[], customFeats:[], paths:[],
+  gen:Object.assign({},GEN_DEFAULTS),
   terr:null, feat:null, labels:{}, memo:{}
 };
 let tool="paint", brush=0, curT="plain", curF="town";

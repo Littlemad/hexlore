@@ -54,8 +54,14 @@ document.getElementById("iSave").onclick=()=>{
   closeInspector();
 };
 
-document.getElementById("iWipe").onclick=()=>{
+document.getElementById("iRandName").onclick=()=>{
   if(sel===null) return;
-  push(); delete S.labels[sel]; delete S.memo[sel];
-  syncInspector(); store(); refresh();
+  const existing=new Set(Object.values(S.labels));
+  let name="";
+  for(let tries=0;tries<50;tries++){
+    name=randName();
+    if(!existing.has(name)) break;
+  }
+  iName.value=name;
+  iName.focus();
 };

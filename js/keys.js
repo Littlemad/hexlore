@@ -6,7 +6,7 @@
    Uses:
      history.js            redo, undo
      inspector.js          closeInspector, insp
-     notes-page.js         openPage
+     lore.js               toggleView
      rail.js               brushI, setTool
      render.js             refresh
      state.js              S, brush, ppmView
@@ -31,7 +31,7 @@ addEventListener("keydown",e=>{
   const map={b:"paint",g:"fill",f:"feature",e:"erase",i:"inspect"};
   if(map[k]) setTool(map[k]);
   if(k==="c"){ S.coord=!S.coord; document.getElementById("cCoord").checked=S.coord; refresh(); store(); }
-  if(k==="n"&&!insp.classList.contains("on")) openPage();
+  if(k==="n"&&!insp.classList.contains("on")) toggleView();
   if(k==="escape") closeInspector();
   if(k==="+"||k==="="){ setZoom(ppmView*1.25,true); }
   if(k==="-"||k==="_"){ setZoom(ppmView/1.25,true); }
