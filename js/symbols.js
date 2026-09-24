@@ -227,7 +227,11 @@ function drawSvgSymbol(c,x,y,s,id,tint,keepColour){
   const e=SVG_CACHE[id];
   if(!e||!e.ready) return;
   const box=s*1.2*SYM_SQUASH, yy=y+s*SYM_SHIFT;
-  const t=c.getTransform(), px=Math.max(1,Math.ceil(box*Math.hypot(t.a,t.b)));
-  const src=keepColour ? e.img : svgTinted(e,tint,px);
-  c.drawImage(src, x-box/2, yy-box/2, box, box);
+  if(keepColour){ c.drawImage(e.img, x-box/2, yy-box/2, box, box); return; }
+  // blit 1:1 on whole device pixels: a fractional offset would smear the bitmap
+  const t=c.getTransform(), px=Math.max(1,Math.round(box*Math.hypot(t.a,t.b)));
+  const p=t.transformPoint(new DOMPoint(x,yy));
+  c.save(); c.setTransform(1,0,0,1,0,0);
+  c.drawImage(svgTinted(e,tint,px), Math.round(p.x-px/2), Math.round(p.y-px/2));
+  c.restore();
 }
