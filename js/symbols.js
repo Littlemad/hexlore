@@ -204,17 +204,22 @@ function loadTileSvg(id, txt, done){
   img.src=svgToUrl(normaliseSvg(txt));
   if(!SVG_CACHE[id]) SVG_CACHE[id]={ready:false};
 }
-/* Recolour the symbol to the tile's mark colour so it always reads, cached
-   per colour so the compositing only happens when something changes. */
-function svgTinted(e, tint){
-  if(e.tintCv && e.tintCol===tint) return e.tintCv;
-  const px=256;
+/* Recolour the symbol to the tile's mark colour so it always reads. The SVG
+   is rasterised at the exact device-pixel size it will be drawn at: shrinking
+   a larger bitmap onto the plate aliases thin strokes away. Cached per colour
+   and size so the compositing only happens when something changes. */
+function svgTinted(e, tint, px){
+  const key=tint+"|"+px;
+  if(!e.tints) e.tints={};
+  if(e.tints[key]) return e.tints[key];
   const off=document.createElement("canvas"); off.width=off.height=px;
   const oc=off.getContext("2d");
   oc.drawImage(e.img,0,0,px,px);
   oc.globalCompositeOperation="source-in";
   oc.fillStyle=tint; oc.fillRect(0,0,px,px);
-  e.tintCv=off; e.tintCol=tint;
+  // zooming produces a new size each step; don't let old ones pile up
+  if(Object.keys(e.tints).length>=24) e.tints={};
+  e.tints[key]=off;
   return off;
 }
 /* Draw a cached SVG centred on (x,y), tinted unless the tile keeps its own colours. */
@@ -222,6 +227,7 @@ function drawSvgSymbol(c,x,y,s,id,tint,keepColour){
   const e=SVG_CACHE[id];
   if(!e||!e.ready) return;
   const box=s*1.2*SYM_SQUASH, yy=y+s*SYM_SHIFT;
-  const src=keepColour ? e.img : svgTinted(e,tint);
+  const t=c.getTransform(), px=Math.max(1,Math.ceil(box*Math.hypot(t.a,t.b)));
+  const src=keepColour ? e.img : svgTinted(e,tint,px);
   c.drawImage(src, x-box/2, yy-box/2, box, box);
 }
