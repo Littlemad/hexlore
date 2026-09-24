@@ -14,7 +14,7 @@
      features.js           FEATURES
      geometry.js           gridCoord
      inspector.js          openInspector
-     rail.js               HINTS
+     rail.js               hintFor
      render.js             refresh
      state.js              S, sel, autoFit, ppmView, tool
      terrains.js           TERRAINS
@@ -105,7 +105,7 @@ function setView(v){
   // the stage has layout again now, so a fit-to-window zoom can be recomputed
   if(autoFit){ ppmView=fitPpm(); showZoom(); }
   refresh();
-  document.getElementById("hint").textContent=HINTS[tool]||"";
+  document.getElementById("hint").textContent=hintFor();
 }
 /* Flip between the two views; bound to the N key. */
 function toggleView(){ setView(view==="lore"?"map":"lore"); }

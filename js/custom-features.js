@@ -6,7 +6,7 @@
    Uses:
      features.js           FEATURES, F_BY_ID, GLYPH, GLYPH_BG, rebuildFeatures
      palette.js            INK, PAPER
-     rail.js               buildFeatureSwatches, setTool
+     rail.js               buildFeatureSwatches, selectFeature
      render.js             refresh
      state.js              S, curF
      storage.js            store
@@ -70,13 +70,8 @@ document.getElementById("fmSave").onclick=()=>{
   S.customFeats.push({id, name:nm, svg:fmSvg, svgName:fmSvgName});
   loadTileSvg(id, fmSvg, ()=>{ buildFeatureSwatches(); refresh(); });
   rebuildFeatures(); buildFeatureSwatches();
-  curF=id;
-  [...featBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",FEATURES[n].id===curF));
   featModal.classList.remove("on");
-  setTool("feature");
-  document.getElementById("hint").textContent=
-    "Click a hex to place "+nm+" · click again to remove";
-  refresh(); store();
+  selectFeature(id); refresh(); store();
 };
 /* Remove a custom point of interest and clear it from any hex that used it. */
 function deleteCustomFeat(id){

@@ -16,7 +16,7 @@ const DPMM_CSS=96/25.4;            // 1 CSS pixel per mm at 100% zoom
 
 /* Random-map settings: percentages 0..100 plus two choices. Saved with the plate; mapgen.js reads them. */
 const GEN_DEFAULTS={ sea:30, mountains:50, forest:50, lakes:40, rivers:50, desert:20, poi:50, roads:50,
-                     climate:"Standard", coast:"Standard" };
+                     climate:"temperate", coast:"Standard" };
 const S = {
   cols:20, rows:14, orient:"pointy",
   title:"", scale:"",
@@ -25,7 +25,15 @@ const S = {
   terr:null, feat:null, labels:{}, memo:{},
   chronicle:null   // the generated (and hand-edited) world history, or null; loregen.js owns its shape
 };
-let tool="paint", brush=0, curT="plain", curF="town";
+/* tool  — the verb: paint, fill, erase or inspect
+   layer — what the verb acts on: terrain, path or feature, chosen by clicking
+           a swatch in the rail
+   curT / curP / curF — the selected item in each of those palettes */
+let tool="paint", layer="terrain", brush=0, curT="plain", curP="road", curF="town";
+/* True when the current tool and layer paint or erase a whole brush disc. */
+function usesBrush(){
+  return (tool==="paint"&&layer==="terrain") || (tool==="erase"&&layer!=="path");
+}
 let sel=null, hover=null, ppmView=DPMM_CSS, autoFit=true, printing=false;
 
 /* Reset the plate to an empty grid of the current size. */

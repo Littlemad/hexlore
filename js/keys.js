@@ -7,9 +7,10 @@
      history.js            redo, undo
      inspector.js          closeInspector, insp
      lore.js               toggleView
-     rail.js               brushI, setTool
+     paths.js              PATH_TYPES
+     rail.js               brushI, selectFeature, selectPath, setTool
      render.js             refresh
-     state.js              S, brush, ppmView
+     state.js              S, brush, curF, ppmView
      storage.js            store
      zoom.js               doFit, setZoom
    -------------------------------------------------------------------------- */
@@ -28,8 +29,10 @@ addEventListener("keydown",e=>{
   if((e.metaKey||e.ctrlKey)&&k==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
   if((e.metaKey||e.ctrlKey)&&k==="y"){ e.preventDefault(); redo(); return; }
   if(e.metaKey||e.ctrlKey) return;
-  const map={b:"paint",g:"fill",f:"feature",e:"erase",i:"inspect"};
+  const map={b:"paint",g:"fill",e:"erase",i:"inspect"};
   if(map[k]) setTool(map[k]);
+  if(k==="f") selectFeature(curF);
+  const pk=PATH_TYPES.find(p=>p.key===k); if(pk) selectPath(pk.id);
   if(k==="c"){ S.coord=!S.coord; document.getElementById("cCoord").checked=S.coord; refresh(); store(); }
   if(k==="n"&&!insp.classList.contains("on")) toggleView();
   if(k==="escape") closeInspector();

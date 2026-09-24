@@ -167,6 +167,20 @@ footer .hint{overflow:hidden;text-overflow:ellipsis}
 .btn:hover:not(:disabled){background:var(--raise);border-color:var(--accent)}
 .btn:disabled{opacity:.35;cursor:default}
 .btn.key{border-color:#2E5A3A;color:#DFF0E4}
+/* the one action a new user reaches for first: filled with the accent */
+.btn.primary{background:#1F5C36;border-color:#2E7A48;color:#EAF5EC;font-weight:600;letter-spacing:.01em}
+.btn.primary:hover:not(:disabled){background:#256B40;border-color:#3A8E56}
+.btn.primary[aria-expanded="true"]{background:#256B40}
+
+/* split control: buttons that touch, read as one unit, but act separately.
+   One solid block with a thin light seam between the two halves. */
+.split{display:flex;align-items:stretch;border-radius:6px;overflow:hidden}
+.split .btn{border:0;border-radius:0;position:relative;padding:10px 12px;font-size:14px}
+.split .btn:first-child{flex:1}
+.split .btn:last-child{flex:0 0 46px;display:flex;align-items:center;justify-content:center;
+  border-left:1px solid rgba(255,255,255,.38)}
+.split .btn:focus-visible{z-index:1;outline-offset:-2px}
+.split .chev{display:block}
 .btn[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
 .btn:focus-visible,.swatch:focus-visible,input:focus-visible,
 .tool:focus-visible,textarea:focus-visible,select:focus-visible{
@@ -209,6 +223,18 @@ body[data-view="map"] .tabs button[aria-pressed="true"]{background:#0F1F13}
   display:flex; align-items:center; gap:8px}
 .grp h2::after{content:"";flex:1;height:1px;background:var(--edge-soft)}
 
+/* collapsible groups: the heading doubles as the toggle, with a small chevron */
+details.grp summary{list-style:none;cursor:pointer;margin:-4px -6px;padding:4px 6px;border-radius:var(--r)}
+details.grp summary::-webkit-details-marker{display:none}
+details.grp summary:hover{background:var(--panel2)}
+details.grp summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+details.grp summary h2::before{content:"";width:0;height:0;flex:0 0 auto;
+  border-left:5px solid var(--dimmer);border-top:3.5px solid transparent;border-bottom:3.5px solid transparent;
+  transition:transform .15s}
+details.grp[open] summary h2::before{transform:rotate(90deg)}
+details.grp:not([open]) summary h2{margin-bottom:0}
+details.grp:not([open]){padding-bottom:10px}
+
 /* the plate title sits first, where it can't be missed */
 .field{display:block;margin-bottom:9px}
 .field span{display:block;font-size:12.5px;color:var(--dim);margin-bottom:5px}
@@ -221,6 +247,7 @@ body[data-view="map"] .tabs button[aria-pressed="true"]{background:#0F1F13}
   padding:8px 9px;cursor:pointer;font-size:14px}
 .tool:hover{background:var(--panel2)}
 .tool[aria-pressed="true"]{background:var(--raise);border-color:var(--accent);color:#fff}
+.tool:disabled{opacity:.35;cursor:default;background:transparent}
 
 .row{display:flex;align-items:center;gap:8px;margin-top:8px}
 .row label{font-size:13.5px;color:var(--dim);flex:0 0 68px}
@@ -245,6 +272,9 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
   color:var(--text);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .swatch[aria-pressed="true"]{border-color:var(--accent);background:var(--raise)}
 .swatch[aria-pressed="true"] span{color:#fff}
+/* palettes other than the active layer's fade back, so one glance shows what the tools act on */
+.swatches[data-off="true"] .swatch{opacity:.55;transition:opacity .12s}
+.swatches[data-off="true"] .swatch:hover{opacity:1}
 
 .checks{display:grid;gap:6px}
 .check{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--dim);cursor:pointer}
@@ -429,20 +459,52 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
 /* ---- random-map settings popover -------------------------------------------
    Anchored under the header gear button by mapgen.js; fixed so header overflow
    cannot clip it. Rows reuse .row so it matches the rail. */
-.gen-panel{position:fixed;z-index:44;display:none;width:312px;padding:14px 16px 16px;
+/* a raised card in the rail's own palette, dropping from the Generate Map split button */
+.gen-panel{position:fixed;z-index:44;display:none;width:min(720px,calc(100vw - 32px));padding:14px 18px 16px;
   max-height:calc(100vh - 64px);overflow-y:auto;
-  background:var(--panel);border:1px solid var(--edge);border-radius:6px;
-  box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  background:var(--panel2);color:var(--text);border:1px solid #2E4F35;border-radius:10px;
+  box-shadow:0 16px 36px -8px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.35)}
 .gen-panel.on{display:block}
 .gen-panel .ghd{display:flex;align-items:center;gap:10px;margin-bottom:2px}
-.gen-panel .ghd h2{margin:0;flex:1;font:500 11.5px/1 "IBM Plex Mono",monospace;
-  letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
-.gen-panel .ghd .btn{font-size:12px;padding:4px 9px}
-.gen-panel .row label{flex:0 0 100px}
-.gen-panel .row output{min-width:38px;text-align:right}
-.gen-panel select{flex:1;background:#0C1A10;color:var(--text);border:1px solid var(--edge);
-  border-radius:var(--r);padding:5px 6px;font:inherit;font-size:13px}
-.gen-panel .note{margin-top:12px}
-.gen-group{margin-top:12px;padding-top:10px;border-top:1px solid var(--edge-soft)}
-.gen-group-hd{font:500 10.5px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--dim);margin-bottom:8px;margin-top:-4px}
+.gen-panel .ghd h2{margin:0;flex:1;font:600 15px/1.2 "Archivo",system-ui,sans-serif;
+  letter-spacing:0;text-transform:none;color:#E6F2E9}
+.gen-panel .ghd .btn{font-size:12px;padding:4px 10px}
+.gen-panel .row{margin-top:10px}
+.gen-panel .row label{flex:0 0 90px;font-size:15px;color:#DCEBDF}
+.gen-panel .row output{min-width:44px;text-align:right;font-size:14.5px}
+.gen-panel select{flex:0 1 200px;min-width:0;color:var(--text);border:1px solid var(--edge);
+  border-radius:6px;padding:7px 34px 7px 10px;font:inherit;font-size:14.5px;
+  -webkit-appearance:none;appearance:none;
+  background:#0C1A10 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4.5 6 8.5 10 4.5' fill='none' stroke='%23C8E0CC' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center}
+.gen-panel .note{margin-top:14px;font-size:12.5px}
+/* one column per slider group, divided by rules; they fold to a stack on narrow screens.
+   Each column carries its own side padding so the rule sits centred in the gap. */
+.gen-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:12px;
+  padding:14px 0;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge)}
+.gen-group{padding:0 22px}
+.gen-group:first-child{padding-left:0}
+.gen-group:last-child{padding-right:0}
+.gen-group+.gen-group{border-left:1px solid var(--edge)}
+.gen-group-hd{font:500 11.5px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+/* inside a column the label sits above its slider, so the slider gets the full width */
+.gen-cols .row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:0 10px;align-items:center;margin-top:9px}
+.gen-cols .row label{grid-column:1/-1;flex:none;font-size:14px;line-height:1;margin-bottom:3px}
+/* a custom track so it starts exactly at the text's left edge, with no native inset */
+.gen-cols .row input[type=range]{-webkit-appearance:none;appearance:none;margin:0;width:100%;height:14px;background:transparent}
+.gen-cols .row input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#2A4A33}
+.gen-cols .row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-4.5px;
+  border-radius:50%;background:var(--accent);border:0;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.gen-cols .row input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#2A4A33}
+.gen-cols .row input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:0}
+.gen-cols .row input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* the world-wide choices run along the bottom, side by side */
+.gen-world{display:flex;flex-wrap:wrap;align-items:center;gap:0 36px;padding-top:12px}
+.gen-world .gen-group-hd{flex:0 0 100%}
+.gen-world .row{flex:0 1 auto;margin-top:8px;gap:10px}
+.gen-world .row label{flex:none}
+@media (max-width:900px){
+  .gen-cols{grid-template-columns:1fr}
+  .gen-group{padding:0}
+  .gen-group+.gen-group{border-left:0;margin-top:12px;padding-top:12px;border-top:1px solid var(--edge-soft)}
+}
