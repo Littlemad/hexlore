@@ -22,7 +22,9 @@
 
    render.js (refresh → syncLore) and exporting.js (the print handlers → view)
    call back into this file from inside callbacks, guarded with typeof because
-   they load first.
+   they load first. buildLore() itself calls forward into loregen.js's
+   buildChronicleTimeline()/chronicleEntry(), guarded the same way since that
+   file loads after this one.
    -------------------------------------------------------------------------- */
 "use strict";
 
@@ -50,6 +52,10 @@ function buildLore(){
   document.getElementById("loreCount").textContent=
     list.length+" annotated hex"+(list.length===1?"":"es")+" · "+S.cols+"×"+S.rows;
   loreBody.innerHTML="";
+  if(typeof buildChronicleTimeline==="function"){
+    const tl=buildChronicleTimeline();
+    if(tl) loreBody.appendChild(tl);
+  }
   if(!list.length){
     loreBody.appendChild(el("p","lore-empty","No lore yet. Use the Lore tool to annotate hexes, or place a point of interest."));
     return;
@@ -60,12 +66,14 @@ function buildLore(){
     const hd=el("div","lore-hd");   // not <header>: the app-wide header rules would restyle it
     hd.appendChild(el("span","lore-gc",coordOf(i)));
     if(nm) hd.appendChild(el("span","lore-name",nm));
-    const editBtn=el("button","lore-edit"); editBtn.textContent="✎"; editBtn.title="Edit this entry";
-    editBtn.style.cssText="flex:0 0 auto;cursor:pointer;padding:2px 6px;background:var(--raise);border:1px solid var(--edge);border-radius:3px;color:var(--text);font-size:14px;margin-left:auto";
+    const editBtn=el("button","lore-edit","✎"); editBtn.type="button"; editBtn.title="Edit this entry";
     hd.appendChild(editBtn);
     card.appendChild(hd);
     card.appendChild(el("div","lore-meta",(t?TERRAINS[t-1].name:"—")+(f?" · "+FEATURES[f-1].name:"")));
+    // a saved note (even one that started life as generated text, then got edited) replaces the generated paragraph
+    const gen=typeof chronicleEntry==="function"?chronicleEntry(i):null;
     if(note) card.appendChild(el("p","lore-txt",note));
+    else if(gen) card.appendChild(el("p","lore-txt",gen.text));
     const open=()=>{ sel=i; openInspector(); };
     editBtn.addEventListener("click",e=>{ e.stopPropagation(); open(); });
     card.addEventListener("click",open);

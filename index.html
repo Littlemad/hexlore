@@ -70,7 +70,7 @@
 
     <div class="grp">
       <h2>Title</h2>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:stretch">
         <input
           type="text"
           id="title"
@@ -82,8 +82,8 @@
           class="btn"
           id="randTitle"
           title="Generate a random fantasy name"
-          style="font-size:17px;padding:6px 10px"
-          >⚄</button
+          style="font-size:15px;padding:0 10px"
+          >🎲</button
         >
       </div>
     </div>
@@ -127,15 +127,15 @@
       <div class="stack"><button class="btn" id="newTile">+ New tile</button></div>
     </details>
 
-    <details class="grp" id="g-paths" open>
-      <summary><h2>Paths</h2></summary>
-      <div class="swatches" id="paths"></div>
-    </details>
-
     <details class="grp" id="g-poi" open>
       <summary><h2>Point of interest</h2></summary>
       <div class="swatches" id="features"></div>
       <div class="stack"><button class="btn" id="newFeat">+ New point of interest</button></div>
+    </details>
+
+    <details class="grp" id="g-paths" open>
+      <summary><h2>Paths</h2></summary>
+      <div class="swatches" id="paths"></div>
     </details>
 
     <details class="grp" id="g-show" open>
@@ -159,6 +159,10 @@
 
   <!-- Lore tab controls: shown in place of the map groups while the Lore view is active -->
   <div class="v-lore">
+    <div class="grp">
+      <h2>Chronicle</h2>
+      <div class="stack"><button class="btn" id="genLore">Generate Lore</button></div>
+    </div>
     <div class="grp">
       <h2>Layout</h2>
       <div class="row" style="margin-top:0">
@@ -202,10 +206,12 @@
       <button class="btn" id="iClose">Close</button>
     </div>
     <div class="ibody">
-      <label class="ifield" style="display:flex;gap:6px;align-items:flex-end">
-        <span style="flex:0 0 auto">Place name</span>
-        <input type="text" id="iName" maxlength="48" placeholder="unnamed" style="flex:1;min-width:0" />
-        <button class="btn" id="iRandName" title="Generate a random name" style="flex:0 0 auto;font-size:16px;padding:5px 8px">⚄</button>
+      <label class="ifield">
+        <span>Place name</span>
+        <div style="display:flex;flex-direction:row;gap:6px;align-items:stretch">
+          <input type="text" id="iName" maxlength="48" placeholder="unnamed" style="flex:1;min-width:0" />
+          <button class="btn" id="iRandName" title="Generate a name that suits this point of interest" style="flex:0 0 auto;font-size:16px;padding:0 10px">🎲</button>
+        </div>
       </label>
       <label class="ifield igrow"
         ><span>Notes</span>
@@ -416,6 +422,7 @@
     <script src="js/custom-tiles.js"></script>
     <script src="js/custom-features.js"></script>
     <script src="js/lore.js"></script>
+    <script src="js/loregen.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/keys.js"></script>
     <script src="js/main.js"></script>
