@@ -45,7 +45,7 @@ const TOOLS=[
   {id:"road", name:"Draw Road"},
   {id:"trail", name:"Draw Trail"},
   {id:"river",   name:"Draw River"},
-  {id:"inspect", name:"Inspect"},
+  {id:"inspect", name:"Lore"},
   {id:"erasepath",name:"Erase path"},
   {id:"erase",   name:"Erase tile"}
 ];
@@ -59,7 +59,7 @@ const HINTS={
 
   river:"Click or drag through hexes to draw a river · right-click to erase",
   erasepath:"Hover a path to highlight it · click to erase it",
-  inspect:"Click any hex to read and edit its record"
+  inspect:"Click any hex to add lore — name and notes"
 };
 const toolBox=document.getElementById("tools");
 /* Switch the active tool and update the button states and hint line. */
