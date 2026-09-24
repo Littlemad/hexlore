@@ -34,14 +34,11 @@
     <rect x="29" y="29" width="42" height="42" fill="none" stroke="black" stroke-width="8" stroke-linejoin="miter"/>
   </symbol>
 
-  <!-- Tower: crenellated battlement + body + arrow-slit cut-out -->
+  <!-- Tower: crenellated tower with arched window -->
   <symbol id="tower" viewBox="0 0 100 100">
     <path fill-rule="evenodd" d="
-      M37,11 h7 v10 h-7 z
-      M46.5,11 h7 v10 h-7 z
-      M56,11 h7 v10 h-7 z
-      M38,20 h24 v55 h-24 z
-      M45,55 h10 v14 h-10 z
+      M32,18 H41 V24 H46 V18 H54 V24 H59 V18 H68 V32 H64 V82 H36 V32 H32 Z
+      M45,58 V49 A5,5 0 0 1 55,49 V58 Z
     "/>
   </symbol>
 
@@ -50,14 +47,12 @@
     <rect x="29" y="29" width="42" height="42"/>
   </symbol>
 
-  <!-- Cave: mountain silhouette + filled entrance -->
+  <!-- Cave: craggy rock with cave mouth cut-out -->
   <symbol id="cave" viewBox="0 0 100 100">
-    <polyline points="10,74 21,48 36,33 52,25 67,34 80,49 90,74"
-      fill="none" stroke="black" stroke-width="7.5"
-      stroke-linejoin="round" stroke-linecap="round"/>
-    <line x1="7" y1="75" x2="93" y2="75"
-      stroke="black" stroke-width="6.5" stroke-linecap="round"/>
-    <path d="M38.5,74 Q37.5,52 50,51 Q62.5,52 61.5,74 Z"/>
+    <path fill-rule="evenodd" d="
+      M8,76 L16,58 L25,51 L29,39 L40,30 L48,33 L56,22 L67,29 L73,41 L81,47 L88,61 L92,76 Z
+      M35,76 C34,67 37,60 41,56 L45,59 L49,52 L54,56 L59,53 C64,59 66,67 65,76 Z
+    "/>
   </symbol>
 
   <!-- Temple: pediment + columns + stylobate -->
@@ -69,19 +64,19 @@
     <rect x="16"   y="70" width="68" height="8"/>
   </symbol>
 
-  <!-- Camp: tent triangle with inner-triangle cut-out -->
+  <!-- Camp: campfire, flame over crossed logs -->
   <symbol id="camp" viewBox="0 0 100 100">
-    <path fill-rule="evenodd" d="M50,21 L80,75 L20,75 Z  M50,43 L59,75 L41,75 Z"/>
+    <path fill-rule="evenodd" d="
+      M50,14 C58,26 70,36 70,52 C70,64 61,72 50,72 C39,72 30,64 30,52 C30,42 36,36 40,30 C40,38 43,43 47,44 C45,34 46,24 50,14 Z
+      M50,68 C44,68 40,63 40,57 C40,50 46,46 50,38 C54,46 60,50 60,57 C60,63 56,68 50,68 Z
+    "/>
+    <line x1="24" y1="86" x2="76" y2="72" stroke="black" stroke-width="7" stroke-linecap="round"/>
+    <line x1="76" y1="86" x2="24" y2="72" stroke="black" stroke-width="7" stroke-linecap="round"/>
   </symbol>
 
-  <!-- Bridge: arch span + water wave -->
+  <!-- Bridge: humped single stone arch -->
   <symbol id="bridge" viewBox="0 0 100 100">
-    <path fill-rule="evenodd" d="
-      M8,5 H92 V55 H78 V15 C78,40 22,40 22,15 V55 H8 Z
-      M22,15 H78 C78,40 22,40 22,15 Z
-    "/>
-    <path d="M5,72 Q18,60 30,72 Q43,84 56,72 Q68,60 80,72 Q88,67 95,70"
-      fill="none" stroke="black" stroke-width="7" stroke-linecap="round"/>
+    <path d="M10,65 V51 Q50,19 90,51 V65 H74 A24,20 0 0 0 26,65 Z"/>
   </symbol>
 
   <!-- Harbour: mast + boom + sail arc -->
