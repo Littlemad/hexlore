@@ -668,8 +668,12 @@ function buildGenPanel(){
 function syncGenPanel(){
   if(!panel||!panel.firstChild) return;
   if(!S.gen) S.gen=Object.assign({},GEN_DEFAULTS);
+  const landlocked=S.gen.coast==="landlocked";
   GEN_FIELDS.forEach(f=>{ const v=S.gen[f.k]!==undefined?S.gen[f.k]:GEN_DEFAULTS[f.k];
-    document.getElementById("gen_"+f.k).value=v; document.getElementById("genOut_"+f.k).textContent=v+"%"; });
+    const inp=document.getElementById("gen_"+f.k);
+    inp.value=v; document.getElementById("genOut_"+f.k).textContent=v+"%";
+    if(f.k==="sea") inp.disabled=landlocked;
+  });
   GEN_CHOICES.forEach(f=>{ const sel=document.getElementById("gen_"+f.k), v=S.gen[f.k];
     sel.value= f.opts.some(o=>o[0]===v) ? v : GEN_DEFAULTS[f.k]; });
 }
