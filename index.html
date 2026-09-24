@@ -49,8 +49,6 @@
       <button id="zIn" title="Zoom in (+)">+</button>
       <button class="fit" id="zFit" title="Fit the sheet to the window (0)">Fit</button>
     </div>
-    <button class="btn" id="gen" title="Fill the sheet with a random kingdom">Generate Map</button>
-    <button class="btn" id="genOpts" title="Random map settings" aria-haspopup="true" aria-expanded="false">&#9881;</button>
     <button class="btn" id="open">Import</button>
     <button class="btn" id="save">Save file</button>
     <button class="btn" id="png">Export PNG</button>
@@ -60,6 +58,16 @@
 <main>
   <div id="rail">
   <div class="v-map">
+    <!-- one visual control, two buttons: generate, and the settings the next generate uses -->
+    <div class="grp" style="padding-bottom:4px">
+      <div class="split">
+        <button class="btn primary" id="gen" title="Fill the sheet with a random kingdom">Generate Map</button>
+        <button class="btn primary" id="genOpts" title="Random map settings" aria-haspopup="true" aria-expanded="false" aria-label="Random map settings">
+          <svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 5 7 9.5 11.5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
     <div class="grp">
       <h2>Title</h2>
       <div style="display:flex;gap:6px;align-items:center">
@@ -80,8 +88,9 @@
       </div>
     </div>
 
-    <div class="grp">
-      <h2>Sheet</h2>
+    <!-- collapsible groups: <details> remembers open/closed per id in localStorage (rail.js) -->
+    <details class="grp" id="g-map" open>
+      <summary><h2>Map sheet</h2></summary>
       <div class="row"
         ><label for="cols">Columns</label><input type="range" id="cols" min="4" max="40" value="20" /><output
           id="colsOut"
@@ -94,37 +103,43 @@
         ></div
       >
       <div class="note" id="fitNote"></div>
-    </div>
+      <div class="stack" style="margin-top:10px"><button class="btn" id="clear" title="Clear every hex, path and note on the sheet">Erase map</button></div>
+    </details>
 
-    <div class="grp">
-      <h2>Tool</h2>
-      <div style="display:flex;gap:6px;margin-bottom:8px">
+    <details class="grp" id="g-tool" open>
+      <summary><h2>Tool</h2></summary>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="btn" id="undo" title="Undo (Ctrl+Z)" disabled style="flex:1">Undo</button>
         <button class="btn" id="redo" title="Redo (Ctrl+Shift+Z)" disabled style="flex:1">Redo</button>
       </div>
-      <div class="row" id="brushRow" style="margin-top:12px;margin-bottom:12px">
+      <!-- the verbs; what they act on is the selected swatch in the palettes below -->
+      <div class="tools" id="tools"></div>
+      <div class="row" id="brushRow" style="margin-top:10px">
         <label for="brush">Brush</label>
         <input type="range" id="brush" min="0" max="2" step="1" value="0" />
         <output id="brushOut">1 hex</output>
       </div>
-      <div class="tools" id="tools"></div>
-      <div class="stack" style="margin-top:8px"><button class="btn" id="clear">Erase map</button></div>
-    </div>
+    </details>
 
-    <div class="grp">
-      <h2>Tiles</h2>
+    <details class="grp" id="g-tiles" open>
+      <summary><h2>Tiles</h2></summary>
       <div class="swatches" id="terrains"></div>
       <div class="stack"><button class="btn" id="newTile">+ New tile</button></div>
-    </div>
+    </details>
 
-    <div class="grp">
-      <h2>Point of interest</h2>
+    <details class="grp" id="g-paths" open>
+      <summary><h2>Paths</h2></summary>
+      <div class="swatches" id="paths"></div>
+    </details>
+
+    <details class="grp" id="g-poi" open>
+      <summary><h2>Point of interest</h2></summary>
       <div class="swatches" id="features"></div>
       <div class="stack"><button class="btn" id="newFeat">+ New point of interest</button></div>
-    </div>
+    </details>
 
-    <div class="grp">
-      <h2>Show</h2>
+    <details class="grp" id="g-show" open>
+      <summary><h2>Show/Hide</h2></summary>
       <div class="row" style="margin-top:0">
         <label for="hexOpacity" style="flex:0 0 80px;font-size:13.5px;color:var(--dim)">Hex opacity</label>
         <input type="range" id="hexOpacity" min="0" max="100" value="72" step="1" />
@@ -139,7 +154,7 @@
         <label class="check"><input type="checkbox" id="cNotes" checked /> Note marks</label>
         <label class="check"><input type="checkbox" id="cMono" /> Monochrome</label>
       </div>
-    </div>
+    </details>
   </div>
 
   <!-- Lore tab controls: shown in place of the map groups while the Lore view is active -->
@@ -384,6 +399,7 @@
     <script src="js/symbols.js"></script>
     <script src="js/terrains.js"></script>
     <script src="js/features.js"></script>
+    <script src="js/paths.js"></script>
     <script src="js/state.js"></script>
     <script src="js/geometry.js"></script>
     <script src="js/render.js"></script>

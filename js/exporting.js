@@ -87,8 +87,8 @@ function hydrate(d){
   if(gsrc.sea===undefined&&gsrc.land!==undefined) gsrc.sea=100-(+gsrc.land||0);
   if(gsrc.water!==undefined){ if(gsrc.lakes===undefined) gsrc.lakes=gsrc.water;
                               if(gsrc.rivers===undefined) gsrc.rivers=gsrc.water; }
-  // migrate old "random" to "Standard" for climate and coast
-  if(gsrc.climate==="random") gsrc.climate="Standard";
+  // older plates: "random"/"Standard" climate is now Temperate; "random" coast is Standard
+  if(gsrc.climate==="random"||gsrc.climate==="Standard") gsrc.climate="temperate";
   if(gsrc.coast==="random") gsrc.coast="Standard";
   if(d.gen&&typeof d.gen==="object") for(const k in GEN_DEFAULTS){
     const v=gsrc[k]; if(v===undefined) continue;

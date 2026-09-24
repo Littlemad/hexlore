@@ -5,7 +5,7 @@
 
    Uses:
      palette.js            PAPER, lum, shade
-     rail.js               buildTileSwatches, setTool
+     rail.js               buildTileSwatches, selectTerrain
      render.js             refresh
      state.js              S, curT
      storage.js            store
@@ -115,10 +115,8 @@ document.getElementById("tmSave").onclick=()=>{
                  svg:tmSvg, svgName:tmSvgName, keepColour:tmKeepColour});
   if(tmSvg) loadTileSvg(id, tmSvg, ()=>{ buildTileSwatches(); refresh(); });
   rebuildTiles(); buildTileSwatches();
-  curT=id;
-  [...terrBox.children].forEach((x,n)=>x.setAttribute("aria-pressed",TERRAINS[n].id===curT));
   tileModal.classList.remove("on");
-  setTool("paint"); refresh(); store();
+  selectTerrain(id); refresh(); store();
 };
 /* Remove a custom terrain and clear it from any hex that used it. */
 function deleteCustom(id){

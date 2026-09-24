@@ -118,8 +118,7 @@ function pickClimate(rand){
     const a=pick(rand,edges); coasts.push(a);
     if(rand()<.3) coasts.push(pick(rand,(a==="W"||a==="E")?["N","S"]:["W","E"]));
   }
-  const cr_=rand(), rolled= cr_<.5?"temperate" : cr_<.8?"hot" : "cold";
-  const climate= ["temperate","hot","cold"].includes(g.climate) ? g.climate : rolled;
+  const climate= ["temperate","hot","cold"].includes(g.climate) ? g.climate : "temperate";
   const relief=g.mountains/50;   // 1 = the default share of peaks and hills, 0 = flat, 2 = twice as much
   return { coasts, climate,
            landFrac: Math.max(.25,Math.min(.95, 1-g.sea/100+(rand()-.5)*.08)),
@@ -625,7 +624,7 @@ const GEN_FIELDS=[
 ];
 const GEN_CHOICES=[
   { k:"climate", name:"Climate", hint:"picking a climate retunes every slider above",
-    opts:[["Standard","Standard"],["temperate","Temperate"],["hot","Hot"],["cold","Cold"]] },
+    opts:[["temperate","Temperate"],["hot","Hot"],["cold","Cold"]] },
   { k:"coast",   name:"Coast",   hint:"whether the sheet meets the sea",
     opts:[["Standard","Standard"],["coastal","Always coastal"],["landlocked","Landlocked"]] }
 ];
@@ -637,23 +636,31 @@ function buildGenPanel(){
   const hd=document.createElement("div"); hd.className="ghd";
   hd.innerHTML='<h2>Random map</h2><button class="btn" type="button" id="genReset">Reset</button>';
   panel.appendChild(hd);
-  let lastGroup="";
-  GEN_FIELDS.forEach(f=>{
-    if(f.group && f.group!==lastGroup){
+  // the groups sit side by side as columns, so the card is wide rather than tall
+  const cols=document.createElement("div"); cols.className="gen-cols"; panel.appendChild(cols);
+  const groups={};
+  const groupEl=name=>{
+    if(!groups[name]){
       const grp=document.createElement("div"); grp.className="gen-group";
-      grp.innerHTML='<div class="gen-group-hd">'+f.group+'</div>';
-      panel.appendChild(grp);
-      lastGroup=f.group;
+      grp.innerHTML='<div class="gen-group-hd">'+name+'</div>';
+      cols.appendChild(grp); groups[name]=grp;
     }
+    return groups[name];
+  };
+  GEN_FIELDS.forEach(f=>{
     const row=document.createElement("div"); row.className="row"; row.title=f.hint;
     row.innerHTML='<label for="gen_'+f.k+'">'+f.name+'</label><input type="range" id="gen_'+f.k+'" min="0" max="100" step="2" /><output id="genOut_'+f.k+'"></output>';
-    panel.appendChild(row);
+    groupEl(f.group).appendChild(row);
     row.querySelector("input").oninput=e=>{ S.gen[f.k]=+e.target.value; row.querySelector("output").textContent=e.target.value+"%"; store(); };
   });
+  // the world-wide choices run along the bottom, under the columns
+  const world=document.createElement("div"); world.className="gen-world";
+  world.innerHTML='<div class="gen-group-hd">World</div>';
+  panel.appendChild(world);
   GEN_CHOICES.forEach(f=>{
     const row=document.createElement("div"); row.className="row"; row.title=f.hint;
     row.innerHTML='<label for="gen_'+f.k+'">'+f.name+'</label><select id="gen_'+f.k+'">'+f.opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join("")+'</select>';
-    panel.appendChild(row);
+    world.appendChild(row);
     row.querySelector("select").onchange=e=>{
       S.gen[f.k]=e.target.value;
       // a climate carries a whole landscape with it, so the sliders follow the choice
@@ -681,21 +688,26 @@ function syncGenPanel(){
   GEN_CHOICES.forEach(f=>{ const sel=document.getElementById("gen_"+f.k), v=S.gen[f.k];
     sel.value= f.opts.some(o=>o[0]===v) ? v : GEN_DEFAULTS[f.k]; });
 }
-/* Show or hide the popover, anchored under the gear button and kept on screen. */
+/* Show or hide the dropdown. It hangs from the whole Generate Map split
+   control, left-aligned with it; if there is no room below it opens above. */
 function toggleGenPanel(open){
   if(!panel) return;
   if(open===undefined) open=!panel.classList.contains("on");
   panel.classList.toggle("on",open); gearBtn.setAttribute("aria-expanded",open);
   if(!open) return;
   syncGenPanel();
-  const r=gearBtn.getBoundingClientRect();
-  panel.style.top=(r.bottom+6)+"px";
-  panel.style.left=Math.max(8,Math.min(innerWidth-panel.offsetWidth-8, r.right-panel.offsetWidth))+"px";
+  const r=(gearBtn.closest(".split")||gearBtn).getBoundingClientRect();
+  const w=panel.offsetWidth, h=panel.offsetHeight;
+  let left=Math.max(8,Math.min(innerWidth-w-8, r.left));
+  let top=r.bottom+8;
+  if(top+h>innerHeight-8 && r.top-8-h>=8) top=r.top-8-h;
+  top=Math.max(8,Math.min(innerHeight-h-8, top));
+  panel.style.top=top+"px"; panel.style.left=left+"px";
 }
 buildGenPanel(); syncGenPanel();
 if(gearBtn) gearBtn.onclick=()=>toggleGenPanel();
 // click anywhere else, or press Escape, to dismiss
-addEventListener("mousedown",e=>{ if(panel.classList.contains("on")&&!panel.contains(e.target)&&e.target!==gearBtn) toggleGenPanel(false); });
+addEventListener("mousedown",e=>{ if(panel.classList.contains("on")&&!panel.contains(e.target)&&!gearBtn.contains(e.target)) toggleGenPanel(false); });
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&panel.classList.contains("on")) toggleGenPanel(false); });
 window.syncGenPanel=syncGenPanel;   // exporting.js calls it from syncRail after an import
 
