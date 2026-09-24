@@ -293,7 +293,6 @@ function moisture(terr,R,riverLand,cfg,rand){
 /* Turn height and moisture into tiles. Water is never touched. */
 function assignBiomes(terr,R,M,cfg,rand){
   const n=S.cols*S.rows, hot=cfg.climate==="hot", p=R.p, m=M.m, dw=M.dw;
-  const coldBand=Math.max(2,Math.round(((cfg.coldEdge==="W"||cfg.coldEdge==="E")?S.cols:S.rows)*.12));
   for(let i=0;i<n;i++){
     if(isWater(terr,i)) continue;
     const far= dw[i]<0 || dw[i]>=cfg.desertNear;
@@ -304,10 +303,10 @@ function assignBiomes(terr,R,M,cfg,rand){
     else if(p[i]<.2&&dw[i]>=0&&dw[i]<=1&&m[i]>.78) id="swamp";
     else if(m[i]>.70&&p[i]>.35) id= hot?"jungle":"heavy-forest";
     else if(m[i]>.50) id="forest";
+    // frozen ground is the cold-climate mirror of desert: a moisture threshold
+    // that scales across the whole map, instead of a band pinned to one edge
+    else if(cfg.tundraMap&&m[i]<.30) id="tundra";
     else id="plain";
-    if(cfg.tundraMap&&(id==="plain"||id==="forest"||id==="heavy-forest")){
-      const [c,r]=cr(i); if(edgeDist(c,r,cfg.coldEdge)<coldBand&&rand()<.6) id="tundra";
-    }
     terr[i]=T(id);
   }
 }
