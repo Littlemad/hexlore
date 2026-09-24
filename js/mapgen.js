@@ -305,7 +305,7 @@ function assignBiomes(terr,R,M,cfg,rand){
     else if(m[i]>.50) id="forest";
     // frozen ground is the cold-climate mirror of desert: a moisture threshold
     // that scales across the whole map, instead of a band pinned to one edge
-    else if(cfg.tundraMap&&m[i]<.30) id="tundra";
+    else if(cfg.tundraMap&&m[i]<.45) id="tundra";
     else id="plain";
     terr[i]=T(id);
   }
