@@ -75,6 +75,12 @@ async function gunzipBytes(bytes){
 }
 /* Gzip files start with this two-byte magic header. */
 function looksGzipped(bytes){ return bytes.length>=2 && bytes[0]===0x1f && bytes[1]===0x8b; }
+/* Decode a base64 string to bytes. The bundled example plates are stored that way. */
+function b64bytes(b64){
+  const s=atob(b64), a=new Uint8Array(s.length);
+  for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i);
+  return a;
+}
 /* Load a parsed save file into S, clamping sizes and remapping tile and feature ids so older files still open. */
 function hydrate(d){
   if(!d||!d.cols) throw new Error("not a hex plate");
@@ -209,7 +215,8 @@ function _refreshMapLibrary(){
       const d=document.createElement("div");
       d.className="im-file-item"; d.title=ex.name;
       d.innerHTML='<span class="im-icon">⬡</span>'+ex.name;
-      d.onclick=()=>doImport(ex.text, ex.name, null);
+      // examples ship gzipped+base64 (build.js); older hand-written ones had plain text
+      d.onclick=()=>doImport(ex.gz?b64bytes(ex.gz):ex.text, ex.name, null);
       list.appendChild(d);
     });
   }

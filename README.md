@@ -4,7 +4,7 @@ A4 hex plate cartography. Paint a hex map, annotate it, print it at 1:1 on A4
 landscape or export it at 300 dpi.
 
 Vanilla HTML, CSS and JavaScript. No dependencies, no package manager, no
-bundler beyond a 60-line build script.
+bundler beyond `build.js`, which uses nothing but the Node standard library.
 
 ## Layout
 
@@ -12,9 +12,11 @@ bundler beyond a 60-line build script.
 index.html              the app — markup, inline POI sprite, and the load order
 css/styles.css          all the CSS, in seven numbered sections
 js/                     21 modules, loaded in order; see below
+js/examples.js          GENERATED from map/ by build.js — do not hand-edit
 assets/features.svg     editable source for the built-in POI icons
 map/                    example save files (.hexplate.json)
-.claude/skills/hexlore/ project skill: how to work on this without reading it all
+build.js                example sync + single-file bundle
+dist/                   build output, gitignored
 ```
 
 `js/` in load order: `palette`, `symbols`, `terrains`, `features`, `state`,
@@ -35,6 +37,42 @@ required. A server is still nicer if you want live reload:
 ```
 npx serve .
 ```
+
+## Building
+
+```
+node build.js
+```
+
+Two things happen, both with the Node standard library only:
+
+1. **`js/examples.js` is regenerated from `map/*.hexplate.json`.** The bundled
+   example plates used to be pasted in by hand, so there were two copies of
+   every map and they drifted apart. Now `map/` is the only source. Each plate
+   is stored gzipped and base64'd, which is about half the size of the raw JSON
+   even after base64, and the decoded bytes go through the exact same import
+   path a gzipped file download already takes.
+
+2. **`dist/hexlore.html` is bundled**, with the stylesheet and all 21 scripts
+   inlined in the order `index.html` declares. One portable file you can email
+   or drop on a static host instead of 24 requests. `dist/hexlore.html.gz` is
+   written next to it for servers that can serve pre-compressed content.
+
+   ```
+   241 KB source  ->  164 KB bundled  ->  53 KB gzipped
+   ```
+
+`node build.js examples` does step 1 only — that is the one you need after
+adding a plate to `map/`.
+
+The minifier strips comments and indentation. It does **not** rename anything,
+and it keeps a newline wherever the source had one, so automatic semicolon
+insertion behaves exactly as it does unbundled. It is a character walk that
+understands strings, template literals, regex literals and comments, which is
+what a naive regex pass would get wrong.
+
+Nothing about this is required: `index.html` still opens and runs directly from
+the filesystem, unbuilt, exactly as before.
 
 ### Changing the built-in POI icons
 
