@@ -22,7 +22,8 @@ const S = {
   title:"", scale:"",
   hexOpacity:72, coord:true, notes:true, mono:false, custom:[], customFeats:[], paths:[],
   gen:Object.assign({},GEN_DEFAULTS),
-  terr:null, feat:null, labels:{}, memo:{}
+  terr:null, feat:null, labels:{}, memo:{},
+  chronicle:null   // the generated (and hand-edited) world history, or null; loregen.js owns its shape
 };
 let tool="paint", brush=0, curT="plain", curF="town";
 let sel=null, hover=null, ppmView=DPMM_CSS, autoFit=true, printing=false;
@@ -31,6 +32,6 @@ let sel=null, hover=null, ppmView=DPMM_CSS, autoFit=true, printing=false;
 function blank(){
   S.terr=new Uint8Array(S.cols*S.rows);
   S.feat=new Uint8Array(S.cols*S.rows);
-  S.labels={}; S.memo={}; S.paths=[]; sel=null;
+  S.labels={}; S.memo={}; S.paths=[]; S.chronicle=null; sel=null;
 }
 blank();

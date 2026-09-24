@@ -53,6 +53,9 @@ function loadFeatureSprite(){
     const vb = sym.getAttribute('viewBox') || '0 0 100 100';
     const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="100" height="100">${sym.innerHTML}</svg>`;
     loadTileSvg(id, svgStr, ()=>{
+      // the sprite decodes while later scripts are still loading; boot() will draw
+      // everything once the page is up, so only repaint on loads after that
+      if(document.readyState==="loading") return;
       if(typeof buildFeatureSwatches==='function') buildFeatureSwatches();
       if(typeof refresh==='function') refresh();
     });

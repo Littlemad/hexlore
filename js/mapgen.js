@@ -499,7 +499,7 @@ function buildRoads(terr,feat,placed,riverLand,rand,cfg){
     let prev=false;
     path.hexes.forEach(([c,r],k)=>{
       const i=idx(c,r), here= k>0&&k<path.hexes.length-1&&riverLand.has(i)&&!feat[i]&&!prev&&rand()<.6;
-      if(here) feat[i]=F_BY_ID.bridge||0;
+      if(here){ feat[i]=F_BY_ID.bridge||0; placed.push({i,kind:"bridge"}); }
       prev=here;
     });
   });
@@ -542,9 +542,10 @@ const FLAVOURS=[
     ruin:["Ruins of {X}","Old {X}","{X} Antica"], tower:["{X} Tower","Torre {X}"],
     bridge:["Ponte {X}","{X} Ponte","Bridge of {X}","{X} Passo"] }
 ];
-/* Names for the places worth naming, deduplicated and clipped to the label limit. */
-function nameThings(placed,rand){
-  const F=pick(rand,FLAVOURS), used=new Set(), labels={};
+/* Names for the places worth naming, deduplicated and clipped to the label limit.
+   One flavour per call, rolled unless the caller pins one. */
+function nameThings(placed,rand,F=pick(rand,FLAVOURS)){
+  const used=new Set(), labels={};
   const stem=grand=>{ for(let t=0;t<20;t++){ const s=pick(rand,F.onset)+pick(rand,F.join)+pick(rand,grand?F.grand:F.town);
     if(!used.has(s)){ used.add(s); return s; } } return pick(rand,F.onset)+pick(rand,F.town); };
   const fill=(tpl,grand)=>tpl.replace("{X}",stem(grand));
@@ -698,5 +699,34 @@ if(gearBtn) gearBtn.onclick=()=>toggleGenPanel();
 addEventListener("mousedown",e=>{ if(panel.classList.contains("on")&&!panel.contains(e.target)&&e.target!==gearBtn) toggleGenPanel(false); });
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&panel.classList.contains("on")) toggleGenPanel(false); });
 window.syncGenPanel=syncGenPanel;   // exporting.js calls it from syncRail after an import
+
+/* ---- 9. naming one place by hand ---------------------------------------- */
+
+/* Which flavour the plate's existing names sound like: the one whose suffixes
+   and templates match the most labels. Random when nothing is named yet. */
+function flavourOf(labels,rand){
+  const names=Object.values(labels||{}); if(!names.length) return pick(rand,FLAVOURS);
+  const fixed=F=>["keep","port","mine","temple","ruin","tower","bridge"].flatMap(k=>F[k])
+    .flatMap(t=>t.replace("{X}","\u0000").split("\u0000")).map(s=>s.trim()).filter(s=>s.length>2);
+  let best=FLAVOURS[0], bestScore=-1;
+  FLAVOURS.forEach(F=>{
+    const ends=F.town.concat(F.grand), words=fixed(F);
+    const score=names.reduce((n,nm)=>n+(ends.some(s=>nm.toLowerCase().endsWith(s))||words.some(w=>nm.includes(w))?1:0),0);
+    if(score>bestScore){ best=F; bestScore=score; }
+  });
+  return best;
+}
+/* A fresh name for a point of interest of the given kind, in the plate's own
+   flavour, avoiding the names already on the sheet. Null for a kind the
+   generator has no pattern for (a custom point of interest). */
+window.namePlace=function(kind){
+  const rand=mulberry((Math.random()*4294967296)>>>0), F=flavourOf(S.labels,rand);
+  const taken=new Set(Object.values(S.labels||{}));
+  for(let t=0;t<40;t++){
+    const name=nameThings([{i:0,kind}],rand,F)[0]||null;
+    if(!name||!taken.has(name)) return name;
+  }
+  return null;
+};
 
 })();

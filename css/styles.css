@@ -102,7 +102,10 @@ body[data-view="lore"] .zoom{visibility:hidden}
 .lore-count{font:500 11.5px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
   text-transform:uppercase;color:var(--dimmer)}
 
-.lore-list{display:grid;grid-template-columns:1fr;gap:22px;align-items:start;max-width:1100px}
+/* a row-major grid, cards left-to-right then wrapping: each row stretches
+   every card in it (the default grid align-items:stretch) to the height of
+   its tallest neighbour, so a short entry never leaves a gap next to a tall one. */
+.lore-list{display:grid;grid-template-columns:1fr;gap:22px;max-width:1100px}
 #lore[data-cols="2"] .lore-list{grid-template-columns:1fr 1fr}
 
 .lore-entry{background:var(--panel2);border:1px solid var(--dim);border-radius:6px;
@@ -117,7 +120,31 @@ body[data-view="lore"] .zoom{visibility:hidden}
 .lore-txt{margin:0;font:400 17.5px/1.85 "Archivo",system-ui,sans-serif;color:#F2F7F3;
   white-space:pre-wrap;overflow-wrap:anywhere}
 .lore-empty{margin:0;color:var(--dimmer);font:400 15px/1.6 "IBM Plex Mono",monospace;grid-column:1/-1}
+/* the ✎ on a card heading, an age heading or an event line */
+.lore-edit{flex:0 0 auto;margin-left:auto;cursor:pointer;padding:2px 6px;background:var(--raise);
+  border:1px solid var(--edge);border-radius:3px;color:var(--text);font-size:14px;line-height:1.2}
+.lore-edit:hover{border-color:var(--accent)}
 
+/* the Chronicle's age-by-age timeline: a full-width block above the place
+   cards, inside the same .lore-list grid so it doesn't get split into a column */
+.lg-timeline{grid-column:1/-1;margin-bottom:8px}
+.lg-age{display:flex;align-items:baseline;gap:0 8px;margin:26px 0 10px;font:600 13px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--edge-soft);padding-bottom:6px}
+.lg-age:first-child{margin-top:0}
+/* in the timeline the ✎ trails the text it edits instead of hugging the right edge */
+.lg-age .lore-edit,.lg-event .lore-edit{margin-left:0;font-size:12px;padding:1px 5px;opacity:0;transition:opacity .12s}
+.lg-age:hover .lore-edit,.lg-event:hover .lore-edit,.lg-age .lore-edit:focus-visible,.lg-event .lore-edit:focus-visible{opacity:1}
+.lg-input{flex:1 1 auto;min-width:0;background:#0C1A10;border:1px solid var(--accent);border-radius:3px;
+  color:var(--text);padding:3px 7px;font:400 15px/1.4 "Archivo",system-ui,sans-serif}
+.lg-age .lg-input{flex:0 1 380px;font:600 13px/1.4 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.lg-input-year{flex:0 0 68px;font:500 13px/1.4 "IBM Plex Mono",monospace;text-align:right}
+.lg-event{display:flex;gap:14px;align-items:baseline;padding:6px 0}
+.lg-event p{flex:0 1 auto;min-width:0}
+.lg-year{flex:0 0 68px;font:500 13px/1.3 "IBM Plex Mono",monospace;color:var(--dim)}
+.lg-place{cursor:pointer;color:var(--accent);text-decoration:underline;
+  text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
+.lg-place:hover,.lg-place:focus-visible{text-decoration-color:var(--accent);outline:none}
+.lg-event p{margin:0;font:400 15px/1.5 "Archivo",system-ui,sans-serif;color:var(--text)}
 footer{flex:0 0 auto; display:flex; gap:18px; align-items:center;
   padding:8px 16px; background:var(--panel); border-top:1px solid var(--edge);
   font:400 12.5px/1.4 "IBM Plex Mono",monospace; color:var(--dim);
@@ -261,7 +288,7 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
 #insp .ifield input{font-weight:500}
 #insp .igrow{flex:1 1 auto;min-height:0}
 #insp .igrow textarea{flex:1 1 auto;min-height:34vh;resize:none;
-  line-height:1.65;font-size:15.5px}
+  font:400 17.5px/1.85 "Archivo",system-ui,sans-serif}
 #insp .ifoot{display:flex;align-items:center;gap:16px;justify-content:space-between}
 #insp .ifoot .btn{font-size:13.5px;padding:9px 14px}
 #insp .ibtn-save{background:#185C36;border-color:#268A50;color:#fff;font-weight:600;min-width:120px}
@@ -388,6 +415,15 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
   #lore .lore-name{font-size:13pt;color:#000}
   #lore .lore-meta{margin-bottom:2.5mm;color:#444;font-size:11pt}
   #lore .lore-txt{font-size:13pt;line-height:1.7;color:#000}
+  /* the timeline may run over a page: break between events, never inside one,
+     and keep an age's heading with its first event. Nothing interactive prints. */
+  #lore .lg-timeline{column-span:all;margin-bottom:6mm}
+  #lore .lg-age{color:#000;border-bottom-color:#000;break-after:avoid;page-break-after:avoid;margin:7mm 0 2.5mm}
+  #lore .lg-event{break-inside:avoid;page-break-inside:avoid;padding:1.5mm 0}
+  #lore .lg-year{color:#333}
+  #lore .lg-event p{color:#000;font-size:11.5pt}
+  #lore .lg-place{color:#000;text-decoration:none}
+  #lore .lore-edit,#lore .lg-input{display:none!important}
 }
 
 /* ---- random-map settings popover -------------------------------------------

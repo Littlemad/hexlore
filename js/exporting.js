@@ -44,10 +44,10 @@ function loreShowing(){ return typeof view!=="undefined" && view==="lore"; }
 window.addEventListener("beforeprint",()=>{ if(loreShowing()) return; printing=true; PAPER=PAPER_PRINT; PAPERLINE=PAPERLINE_PRINT; GLYPH_BG=PAPER; refresh(); });
 window.addEventListener("afterprint",()=>{ if(loreShowing()) return; printing=false; PAPER=PAPER_SCREEN; PAPERLINE=PAPERLINE_SCREEN; GLYPH_BG=PAPER; refresh(); });
 
-/* Serialise the plate to the .hexplate.json save format (version 8). */
+/* Serialise the plate to the .hexplate.json save format (version 9: 8 plus the chronicle). */
 function serialise(){
   return JSON.stringify({
-    v:8, cols:S.cols, rows:S.rows,
+    v:9, cols:S.cols, rows:S.rows, chronicle:S.chronicle,
     title:S.title,
     show:{hexOpacity:S.hexOpacity,coord:S.coord,notes:S.notes,mono:S.mono},
     custom:S.custom, customFeats:S.customFeats||[], paths:(S.paths||[]),
@@ -78,6 +78,8 @@ function hydrate(d){
     S.feat[i]= v ? (fmap.length ? (fmap[v-1]||0) : (v<=FEATURES.length?v:0)) : 0; });
   for(const k in (d.labels||{})) if(+k<n) S.labels[k]=String(d.labels[k]).slice(0,28);
   for(const k in (d.memo||{}))   if(+k<n) S.memo[k]=String(d.memo[k]).slice(0,1200);
+  // loregen.js loads after this file, but hydrate only ever runs once the page is up
+  S.chronicle= typeof validChronicle==="function" ? validChronicle(d.chronicle,n) : null;
   if(d.show){ S.hexOpacity=d.show.hexOpacity!==undefined?+d.show.hexOpacity:72;
               S.coord=!!d.show.coord; S.notes=d.show.notes!==false; S.mono=!!d.show.mono; }
   // random-map settings: unknown keys are dropped, numbers clamped, older files get the defaults

@@ -7,6 +7,7 @@
      features.js           FEATURES
      geometry.js           gridCoord, inside
      history.js            push
+     loregen.js            chronicleEntry (guarded with typeof: loads after this file)
      render.js             draw, refresh
      state.js              S, sel
      storage.js            store
@@ -34,7 +35,11 @@ function syncInspector(){
   const tName=t?TERRAINS[t-1].name:"—", fName=f?FEATURES[f-1].name:"—";
   document.getElementById("iOff").textContent=tName+"  ·  "+fName;
   if(document.activeElement!==iName) iName.value=S.labels[sel]||"";
-  if(document.activeElement!==iNote) iNote.value=S.memo[sel]||"";
+  if(document.activeElement!==iNote){
+    // no manual note yet: show the generated chronicle entry (if any) so it can be read and edited here
+    const gen=typeof chronicleEntry==="function"?chronicleEntry(sel):null;
+    iNote.value=S.memo[sel]||(gen?gen.text:"");
+  }
   const btn=document.getElementById("iSave");
   if(btn){ btn.textContent="Save"; btn.style.background=""; btn.style.borderColor=""; }
 }
@@ -54,13 +59,16 @@ document.getElementById("iSave").onclick=()=>{
   closeInspector();
 };
 
+/* Roll a name that suits the hex's point of interest (a ruin gets "Ruins of…",
+   a mine "… Delve"), falling back to the generic plate namer when the hex has
+   none or the kind is a custom one the generator doesn't know. */
 document.getElementById("iRandName").onclick=()=>{
   if(sel===null) return;
-  const existing=new Set(Object.values(S.labels));
-  let name="";
-  for(let tries=0;tries<50;tries++){
-    name=randName();
-    if(!existing.has(name)) break;
+  const f=S.feat[sel], kind=f?FEATURES[f-1].id:null;
+  let name= kind&&window.namePlace ? namePlace(kind) : null;
+  if(!name){
+    const existing=new Set(Object.values(S.labels));
+    for(let tries=0;tries<50;tries++){ name=randName(); if(!existing.has(name)) break; }
   }
   iName.value=name;
   iName.focus();
