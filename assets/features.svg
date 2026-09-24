@@ -76,7 +76,7 @@
 
   <!-- Bridge: humped single stone arch -->
   <symbol id="bridge" viewBox="0 0 100 100">
-    <path d="M8,70 V48 Q50,12 92,48 V70 H72 A22,18 0 0 0 28,70 Z"/>
+    <path d="M10,65 V51 Q50,19 90,51 V65 H74 A24,20 0 0 0 26,65 Z"/>
   </symbol>
 
   <!-- Harbour: mast + boom + sail arc -->
