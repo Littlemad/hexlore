@@ -1,35 +1,54 @@
 /* --------------------------------------------------------------------------
    pointer.js
 
-   All pointer input on the canvas, and the road/trail/river path drawing that
-   layers extra handlers on top of it. The two are in one file because the path
-   tools deliberately override the base handlers.
+   All pointer input on the canvas. One set of handlers dispatches on the
+   active layer: terrain and feature edits go through apply() in edits.js,
+   while the path layer draws or erases whole roads, trails, rivers and ship
+   routes here.
 
    Uses:
      edits.js              apply
      geometry.js           center, edgeNeighbour, idx, inside, layout, neighbours, pick
      history.js            buttons, past, push
      inspector.js          openInspector, syncInspector
+     paths.js              pathHits
      rail.js               readout
      render.js             cv, draw, refresh
-     state.js              S, hover, sel, tool
+     state.js              S, curP, hover, layer, sel, tool
      storage.js            store
    -------------------------------------------------------------------------- */
 "use strict";
 
 let drawing=false, lastCell=null, erasing=false;
+let activePath=null;      // {type,hexes:[]} being drawn right now
+let pathEraseHover=null;  // hex under cursor while erasing paths
+
 /* Convert a pointer event into [mmX, mmY, layout] on the sheet. */
 function toSheet(ev){
   const rect=cv.getBoundingClientRect(), L=layout();
   return [ (ev.clientX-rect.left)/rect.width*L.pw,
            (ev.clientY-rect.top)/rect.height*L.ph, L ];
 }
+/* True while the pointer edits paths rather than hex contents. */
+function onPaths(){ return layer==="path" && tool!=="inspect" && tool!=="fill"; }
+
 cv.addEventListener("contextmenu",e=>e.preventDefault());
+
 cv.addEventListener("pointerdown",e=>{
   const [mx,my,L]=toSheet(e), cell=pick(mx,my,L); if(!cell) return;
   erasing = e.button===2 || e.shiftKey;
   if(tool==="inspect" && !erasing){
     sel=idx(cell[0],cell[1]); openInspector(); draw(); return;
+  }
+  if(onPaths()){
+    if(erasing||tool==="erase"){
+      push();
+      if(!erasePathsAt(cell[0],cell[1])) past.pop();
+      buttons(); pathEraseHover=null; store(); refresh(); return;
+    }
+    cv.setPointerCapture(e.pointerId);
+    startPath(curP,cell[0],cell[1]);
+    hover=cell; draw(); return;
   }
   cv.setPointerCapture(e.pointerId);
   drawing=true; lastCell=cell.join(); push();
@@ -38,31 +57,35 @@ cv.addEventListener("pointerdown",e=>{
   if(sel===idx(cell[0],cell[1])) syncInspector();
   refresh(); store();
 });
+
 cv.addEventListener("pointermove",e=>{
   const [mx,my,L]=toSheet(e), cell=pick(mx,my,L);
   const key=cell?cell.join():null;
+  if(onPaths()){
+    if(activePath){ movePath(cell,mx,my,L); return; }
+    pathEraseHover = tool==="erase" ? (cell||null) : null;
+  }
   if(drawing&&cell&&key!==lastCell){
     lastCell=key; apply(cell[0],cell[1],erasing); hover=cell;
     if(sel===idx(cell[0],cell[1])) syncInspector();
     refresh(); store(); return;
   }
-  if(key!==(hover?hover.join():null)){ hover=cell; draw(); }
+  if(key!==(hover?hover.join():null) || pathEraseHover){ hover=cell; draw(); }
   readout(cell);
 });
-window.addEventListener("pointerup",()=>{ drawing=false; lastCell=null; });
+
+window.addEventListener("pointerup",()=>{
+  drawing=false; lastCell=null;
+  if(activePath){ commitPath(); refresh(); }
+});
 cv.addEventListener("pointerleave",()=>{ hover=null; pathEraseHover=null; draw(); readout(null); });
 
-/* ══════════════ path drawing (roads & rivers) ══════════════
+/* ══════════════ path drawing ══════════════
    Each path is a sequence of hex grid positions. Dragging through hexes
-   extends the active path; right-click removes any path segment passing
-   through the clicked hex. */
-let activePath=null;  // {type,hexes:[]} being drawn right now
-let pathEraseHover=null;  // hex under cursor when erasepath is active
+   extends the active path; dragging off the grid adds an exit node so the
+   line runs to the sheet edge. */
 
-/* String key for a hex, for cheap membership tests while dragging. */
-function pathKey(c,r){ return c+","+r; }
-
-/* Begin a new road/trail/river at (col,row). */
+/* Begin a new path of `type` at (col,row). */
 function startPath(type,col,r){
   activePath={type,hexes:[[col,r]]};
 }
@@ -121,13 +144,16 @@ function commitPath(){
   }
   activePath=null;
 }
-/* Drop every path that runs through (col,r). */
-function erasePathsAt(col,r){
-  S.paths=S.paths.filter(p=>!p.hexes.some(h=>!h.exit&&h[0]===col&&h[1]===r));
+/* The paths of the active kind that run through (col,r). */
+function pathsAt(col,r){
+  return S.paths.filter(p=>p.type===curP && p.hexes.some(h=>pathHits(h,col,r)));
 }
-
-// Override pointerdown/pointermove/pointerup for road/river tools
-const _origDown=cv.onpointerdown||null;
+/* Drop every path of the active kind that runs through (col,r). Returns true if any went. */
+function erasePathsAt(col,r){
+  const before=S.paths.length;
+  S.paths=S.paths.filter(p=>!(p.type===curP && p.hexes.some(h=>pathHits(h,col,r))));
+  return S.paths.length!==before;
+}
 
 /* ── Exit-point helpers ──────────────────────────────────────────────────────
    An exit node has the form {exit:true, col, row, ex, ey} where (ex,ey) is
@@ -154,27 +180,10 @@ function exitPoint(borderCol, borderRow, mx, my, L){
   return {exit:true, col:borderCol, row:borderRow, ex:best.ex, ey:best.ey};
 }
 
-cv.addEventListener("pointerdown",e=>{
-  if(tool!=="road"&&tool!=="trail"&&tool!=="river"&&tool!=="erasepath") return;
-  const [mx,my,L]=toSheet(e);
-  const cell=pick(mx,my,L); if(!cell) return;
-  if(e.button===2||e.shiftKey){ push(); erasePathsAt(cell[0],cell[1]); store(); refresh(); return; }
-  if(tool==="erasepath") return;
-  cv.setPointerCapture(e.pointerId);
-  startPath(tool,cell[0],cell[1]);
-  hover=cell; draw();
-},{capture:false});
-
-cv.addEventListener("pointermove",e=>{
-  if(tool!=="road"&&tool!=="trail"&&tool!=="river"&&tool!=="erasepath") return;
-  const [mx,my,L]=toSheet(e);
-  let cell=pick(mx,my,L);
-  if(tool==="erasepath"){
-    pathEraseHover=cell||null;
-    if(cell) hover=cell;
-    draw(); return;
-  }
-  if(!cell && activePath && activePath.hexes.length>=1){
+/* Pointer moved while a path is being drawn: extend it on the grid, or aim
+   an exit node at the sheet edge when the pointer is off the grid. */
+function movePath(cell,mx,my,L){
+  if(!cell){
     // Off-grid: find nearest border hex and compute exit edge midpoint
     let best=null, bd=Infinity;
     for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
@@ -188,12 +197,9 @@ cv.addEventListener("pointermove",e=>{
     }
     if(best){
       hover=best;
-      // Only add/update exit if the last hex in the active path is this border hex
       const last=activePath.hexes[activePath.hexes.length-1];
       if(last && !last.exit && last[0]===best[0] && last[1]===best[1]){
-        // Replace any previous exit node
-        const prevExit=activePath.hexes[activePath.hexes.length-1];
-        if(prevExit && prevExit.exit) activePath.hexes.pop();
+        // Only add an exit if the last hex in the active path is this border hex
         const ep=exitPoint(best[0],best[1],mx,my,L);
         if(ep) activePath.hexes.push(ep);
       } else if(last && last.exit){
@@ -205,20 +211,9 @@ cv.addEventListener("pointermove",e=>{
     }
     refresh(); return;
   }
-  if(cell){
-    // Back on the grid: remove any trailing exit node
-    if(activePath){
-      const last=activePath.hexes[activePath.hexes.length-1];
-      if(last && last.exit) activePath.hexes.pop();
-    }
-    hover=cell; if(activePath) extendPath(cell[0],cell[1]);
-  }
+  // Back on the grid: remove any trailing exit node, then extend
+  const last=activePath.hexes[activePath.hexes.length-1];
+  if(last && last.exit) activePath.hexes.pop();
+  hover=cell; extendPath(cell[0],cell[1]);
   refresh();
-},{capture:false});
-
-window.addEventListener("pointerup",e=>{
-  if(tool==="erasepath" && pathEraseHover){
-    push(); erasePathsAt(pathEraseHover[0],pathEraseHover[1]); store(); refresh(); return;
-  }
-  if(activePath){ commitPath(); refresh(); }
-},{capture:false});
+}
