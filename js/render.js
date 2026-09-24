@@ -9,10 +9,11 @@
      geometry.js           center, disc, edgeNeighbour, gridCoord, hexInto, hexPath, idx,
                            inside, layout
      palette.js            DARK_TEXT, INK, META, PAPER, PAPERLINE
-     pointer.js            activePath, drawing, pathEraseHover
+     paths.js              P_BY_ID
+     pointer.js            activePath, drawing, pathEraseHover, pathsAt
      rail.js               showFit
      state.js              DPMM_PRINT, HEAD, M, S, brush, hover, ppmView, printing, sel,
-                           tool
+                           tool, usesBrush
      symbols.js            SYM_SHIFT, SYM_SQUASH
      terrains.js           PAPER_INK, TERRAINS
      lore.js               syncLore (loads later; refresh() guards the call with typeof)
@@ -137,29 +138,41 @@ function paint(c,ppm,L){
     }
   }
   if(S.paths && S.paths.length){
-    /* Paths sit above the tiles, but must not run across open water: clip to
-       the whole sheet minus every sea/lake hex, so a river meeting the coast
-       stops at the shoreline instead of drawing over it. */
-    pc.save();
-    // Clip to the union of all hex cells, then subtract sea/lake hexes.
-    // This prevents any road, trail or river from drawing outside the grid boundary.
-    pc.beginPath();
-    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
-      hexInto(pc,center(col,r,L)[0],center(col,r,L)[1],s+s*.01);
-    }
-    for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
-      const t=S.terr[idx(col,r)]; if(!t) continue;
-      const id=TERRAINS[t-1].id;
-      if(id!=="sea" && id!=="lake") continue;
-      const [wx,wy]=center(col,r,L);
-      hexInto(pc,wx,wy,s+s*.01);
-    }
-    pc.clip("evenodd");
+    /* Paths sit above the tiles and are clipped to the grid. Land paths must
+       not run across open water, so a river meeting the coast stops at the
+       shoreline; ship routes are the opposite and stay on sea and lake hexes.
+       Each PATH_TYPES.water mode gets its own clip pass. */
+    const gridMask=()=>{
+      for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+        const [gx,gy]=center(col,r,L); hexInto(pc,gx,gy,s+s*.01);
+      }
+    };
+    const waterMask=()=>{
+      for(let r=0;r<S.rows;r++) for(let col=0;col<S.cols;col++){
+        const t=S.terr[idx(col,r)]; if(!t) continue;
+        const id=TERRAINS[t-1].id;
+        if(id!=="sea" && id!=="lake") continue;
+        const [wx,wy]=center(col,r,L); hexInto(pc,wx,wy,s+s*.01);
+      }
+    };
+    const clipTo=mode=>{
+      pc.save();
+      if(mode==="avoid"){ pc.beginPath(); gridMask(); waterMask(); pc.clip("evenodd"); }
+      else if(mode==="only"){ pc.beginPath(); gridMask(); pc.clip(); pc.beginPath(); waterMask(); pc.clip(); }
+      else { pc.beginPath(); gridMask(); pc.clip(); }
+    };
+    const live=S.paths.filter(p=>p.hexes.length>=2);
+    const waterMode=p=>(P_BY_ID[p.type]||P_BY_ID.road).water;
+
+    for(const mode of ["avoid","only","any"]){
+    const group=live.filter(p=>waterMode(p)===mode);
+    if(!group.length) continue;
+    clipTo(mode);
 
     // Group rivers and draw them all in one compound stroke pass so their
     // thick outlines blend at junctions instead of double-painting.
-    const rivers=S.paths.filter(p=>p.type==="river" && p.hexes.length>=2);
-    const nonRivers=S.paths.filter(p=>p.type!=="river" && p.hexes.length>=2);
+    const rivers=group.filter(p=>p.type==="river");
+    const nonRivers=group.filter(p=>p.type!=="river");
 
     if(rivers.length){
       if(!S.mono){
@@ -247,13 +260,20 @@ function paint(c,ppm,L){
           }
         }
         pc.lineWidth=s*.038; pc.stroke();
+      } else if(path.type==="ship"){
+        // Ship route: even chart-style dashes across the water
+        pc.lineCap="butt"; pc.lineWidth=s*.04;
+        pc.setLineDash([s*.26,s*.16]);
+        pc.beginPath(); strokeSpline(pc,pts); pc.stroke();
+        pc.setLineDash([]);
       } else {
-        // Legacy fallback
+        // Unknown kind (older file): draw it like a road
         pc.lineWidth=s*.055;
         pc.beginPath(); strokeSpline(pc,pts); pc.stroke();
       }
     });
-    pc.restore();   // release the water mask
+    pc.restore();   // release this group's clip
+    }
   }
 
   // note marks, top of the hex
@@ -365,14 +385,14 @@ function draw(){
     // Only append hover if it is not already represented by an exit node
     const lastH=activePath.hexes[activePath.hexes.length-1];
     if(hover && !(lastH && lastH.exit)) pts.push(center(hover[0],hover[1],L));
-    const col=activePath.type==="river" ? "#3D9BC7" : INK; // road and trail both preview in INK
-    ctx.strokeStyle=col; ctx.lineWidth=L.s*.12; ctx.lineCap="round"; ctx.lineJoin="round";
+    ctx.strokeStyle=(P_BY_ID[activePath.type]||P_BY_ID.road).colour;
+    ctx.lineWidth=L.s*.12; ctx.lineCap="round"; ctx.lineJoin="round";
     ctx.beginPath(); pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py)); ctx.stroke();
   }
-  // erasepath highlight: tint paths that pass through the hovered hex
-  if(tool==="erasepath" && pathEraseHover){
+  // path erase highlight: tint the active kind's paths through the hovered hex
+  if(pathEraseHover){
     const [hx,hy]=center(pathEraseHover[0],pathEraseHover[1],L);
-    const doomed=(S.paths||[]).filter(p=>p.hexes.some(h=>!h.exit&&h[0]===pathEraseHover[0]&&h[1]===pathEraseHover[1]));
+    const doomed=pathsAt(pathEraseHover[0],pathEraseHover[1]);
     doomed.forEach(path=>{
       const pts=path.hexes.map(h=>h.exit?[h.ex,h.ey]:center(h[0],h[1],L));
       ctx.save();
@@ -387,8 +407,8 @@ function draw(){
     ctx.beginPath(); ctx.moveTo(hx-r,hy-r); ctx.lineTo(hx+r,hy+r); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(hx+r,hy-r); ctx.lineTo(hx-r,hy+r); ctx.stroke();
   }
-  if(hover && tool!=="fill"){
-    const cells=(tool==="paint"||tool==="erase") ? disc(hover[0],hover[1],brush) : [hover];
+  if(hover && tool!=="fill" && !pathEraseHover){
+    const cells=usesBrush() ? disc(hover[0],hover[1],brush) : [hover];
     ctx.strokeStyle = tool==="erase" ? "rgba(190,70,50,.95)"
                     : tool==="inspect" ? "rgba(69,196,222,.95)" : "rgba(20,40,52,.9)";
     ctx.lineWidth=L.s*.055;
