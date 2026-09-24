@@ -121,8 +121,9 @@ body[data-view="lore"] .zoom{visibility:hidden}
   white-space:pre-wrap;overflow-wrap:anywhere}
 .lore-empty{margin:0;color:var(--dimmer);font:400 15px/1.6 "IBM Plex Mono",monospace;grid-column:1/-1}
 /* the ✎ on a card heading, an age heading or an event line */
-.lore-edit{flex:0 0 auto;margin-left:auto;cursor:pointer;padding:2px 6px;background:var(--raise);
-  border:1px solid var(--edge);border-radius:3px;color:var(--text);font-size:14px;line-height:1.2}
+.lore-edit{flex:0 0 auto;margin-left:auto;cursor:pointer;padding:0;
+  width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--raise);border:1px solid var(--edge);border-radius:50%;color:var(--text);font-size:13px;line-height:1}
 .lore-edit:hover{border-color:var(--accent)}
 
 /* the Chronicle's age-by-age timeline: a full-width block above the place
@@ -132,7 +133,7 @@ body[data-view="lore"] .zoom{visibility:hidden}
   letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--edge-soft);padding-bottom:6px}
 .lg-age:first-child{margin-top:0}
 /* in the timeline the ✎ trails the text it edits instead of hugging the right edge */
-.lg-age .lore-edit,.lg-event .lore-edit{margin-left:0;font-size:12px;padding:1px 5px;opacity:0;transition:opacity .12s}
+.lg-age .lore-edit,.lg-event .lore-edit{margin-left:0;font-size:11px;width:20px;height:20px;opacity:0;transition:opacity .12s}
 .lg-age:hover .lore-edit,.lg-event:hover .lore-edit,.lg-age .lore-edit:focus-visible,.lg-event .lore-edit:focus-visible{opacity:1}
 .lg-input{flex:1 1 auto;min-width:0;background:#0C1A10;border:1px solid var(--accent);border-radius:3px;
   color:var(--text);padding:3px 7px;font:400 15px/1.4 "Archivo",system-ui,sans-serif}

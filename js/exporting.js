@@ -56,6 +56,25 @@ function serialise(){
     terr:Array.from(S.terr), feat:Array.from(S.feat), labels:S.labels, memo:S.memo
   });
 }
+/* gzip a JSON string down to bytes, for a smaller save file. Falls back to null where the Compression Streams API is unavailable. */
+async function gzipText(str){
+  if(typeof CompressionStream==="undefined") return null;
+  const cs=new CompressionStream("gzip");
+  const writer=cs.writable.getWriter();
+  writer.write(new TextEncoder().encode(str));
+  writer.close();
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+/* Reverse of gzipText. */
+async function gunzipBytes(bytes){
+  const ds=new DecompressionStream("gzip");
+  const writer=ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+}
+/* Gzip files start with this two-byte magic header. */
+function looksGzipped(bytes){ return bytes.length>=2 && bytes[0]===0x1f && bytes[1]===0x8b; }
 /* Load a parsed save file into S, clamping sizes and remapping tile and feature ids so older files still open. */
 function hydrate(d){
   if(!d||!d.cols) throw new Error("not a hex plate");
@@ -113,16 +132,18 @@ let importedFileName=null;
 
 document.getElementById("save").onclick=async()=>{
   const json=serialise();
+  const gz=await gzipText(json);
+  const payload=gz||json, mime=gz?"application/gzip":"application/json";
   if(importedFileHandle){
     try{
       const writable=await importedFileHandle.createWritable();
-      await writable.write(json);
+      await writable.write(payload);
       await writable.close();
       showToast("✓ Saved to "+importedFileHandle.name);
       return;
     }catch(e){ importedFileHandle=null; }
   }
-  dl(URL.createObjectURL(new Blob([json],{type:"application/json"})),
+  dl(URL.createObjectURL(new Blob([payload],{type:mime})),
      importedFileName||slug()+".hexplate.json");
 };
 
@@ -139,9 +160,16 @@ function _librarySave(name, text){
   }catch(e){}
 }
 
-/* Parse, hydrate and sync — the shared path for all import flows. */
-function doImport(text, filename, handle){
+/* Parse, hydrate and sync — the shared path for all import flows.
+   `data` is either the save's JSON text directly (library/example entries) or the
+   raw bytes read from a file, gzipped or plain, detected via the gzip magic header. */
+async function doImport(data, filename, handle){
   try{
+    let text=data;
+    if(typeof data!=="string"){
+      const bytes=new Uint8Array(data);
+      text=looksGzipped(bytes) ? await gunzipBytes(bytes) : new TextDecoder().decode(bytes);
+    }
     push(); hydrate(JSON.parse(text)); syncRail(); closeInspector();
     if(autoFit){ ppmView=fitPpm(); showZoom(); }
     refresh(); store();
@@ -214,7 +242,7 @@ document.getElementById("imBrowse").onclick=async()=>{
         multiple:false
       });
       const f=await handle.getFile();
-      doImport(await f.text(), f.name, handle); return;
+      doImport(await f.arrayBuffer(), f.name, handle); return;
     }catch(e){}
   }
   const inp=document.createElement("input"); inp.type="file"; inp.accept=".json,application/json";
@@ -222,7 +250,7 @@ document.getElementById("imBrowse").onclick=async()=>{
     const f=inp.files&&inp.files[0]; if(!f) return;
     const rd=new FileReader();
     rd.onload=()=>doImport(rd.result, f.name, null);
-    rd.readAsText(f);
+    rd.readAsArrayBuffer(f);
   };
   inp.click();
 };

@@ -7,7 +7,7 @@
      features.js           FEATURES
      geometry.js           gridCoord, inside
      history.js            push
-     loregen.js            chronicleEntry (guarded with typeof: loads after this file)
+     loregen.js            chronicleEntry, renameChroniclePlace (guarded with typeof: loads after this file)
      render.js             draw, refresh
      state.js              S, sel
      storage.js            store
@@ -50,8 +50,9 @@ insp.addEventListener("pointerdown",e=>{ if(e.target===insp) closeInspector(); }
 document.getElementById("iSave").onclick=()=>{
   if(sel===null) return;
   push();
-  const nm=iName.value.trim();
+  const nm=iName.value.trim(), oldNm=S.labels[sel];
   if(nm) S.labels[sel]=nm; else delete S.labels[sel];
+  if(oldNm&&nm&&typeof renameChroniclePlace==="function") renameChroniclePlace(sel,oldNm,nm);
   const nt=iNote.value;
   if(nt.trim()) S.memo[sel]=nt; else delete S.memo[sel];
   store();

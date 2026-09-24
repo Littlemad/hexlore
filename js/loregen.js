@@ -340,7 +340,7 @@ function generateChronicle(){
     const others=otherNames.filter(n=>n!==name);
     const {year,text,headline}=writeEntry(kind,name,rand,total,others);
     places[i]={name,kind,year,text};
-    if(headline) timeline.push({year,text:headline,i});
+    if(headline) timeline.push({year,text:linkify(headline,name,i),i});
   });
   timeline.sort((a,b)=>a.year-b.year);
   S.chronicle={title:"The Chronicle of "+(S.title||"the Realm"),total,ages:buildAges(rand,total,timeline),places};
@@ -368,17 +368,57 @@ function validChronicle(c,n){
 /* The generated history for hex i, or null when there is no chronicle / i wasn't named. */
 function chronicleEntry(i){ return S.chronicle ? S.chronicle.places[i]||null : null; }
 
-/* One event's sentence, with the place it concerns turned into a link that
-   opens that hex's record. Headlines name their own place exactly once. */
-function eventText(e){
-  const p=el("p",""), place=S.chronicle.places[e.i], at=place?e.text.indexOf(place.name):-1;
-  if(at<0){ p.textContent=e.text; return p; }
-  p.appendChild(document.createTextNode(e.text.slice(0,at)));
-  const link=el("span","lg-place",place.name); link.setAttribute("role","link"); link.tabIndex=0;
-  const open=()=>{ sel=e.i; openInspector(); };
+/* A markdown-style link tying event/headline text to the hex it concerns:
+   [Label](#123). Surviving free-text edits is the whole point — eventText()
+   finds the target hex from the #index, not by matching the place's name. */
+const PLACE_LINK_RE=/\[([^\]]+)\]\(#(\d+)\)/;
+/* Wrap name's first occurrence in text with a link to hex i, or return text unchanged if not found. */
+function linkify(text,name,i){
+  const at=text.indexOf(name);
+  return at<0 ? text : text.slice(0,at)+"["+name+"](#"+i+")"+text.slice(at+name.length);
+}
+
+/* Called when hex i is renamed, so the chronicle stays in step: the place's own
+   record is retitled, and oldName is swapped for newName everywhere it was
+   written into generated text — its own entry and any other place's entry that
+   mentioned it (writeEntry() interpolates other places' names into its prose). */
+function renameChroniclePlace(i,oldName,newName){
+  if(!S.chronicle||!oldName||oldName===newName) return;
+  const swap=t=>t.split(oldName).join(newName);
+  const tokenRe=new RegExp("\\[[^\\]]+\\]\\(#"+i+"\\)");
+  const place=S.chronicle.places[i];
+  if(place){ place.name=newName; place.text=swap(place.text); }
+  for(const k in S.chronicle.places) if(+k!==i) S.chronicle.places[k].text=swap(S.chronicle.places[k].text);
+  S.chronicle.ages.forEach(a=>a.events.forEach(e=>{
+    // a linked event keeps pointing at hex i regardless of wording; only its label needs the new name
+    e.text=tokenRe.test(e.text) ? e.text.replace(tokenRe,"["+newName+"](#"+i+")") : swap(e.text);
+  }));
+}
+
+/* Build the clickable place link itself, wherever it's found in an event's text. */
+function placeLink(label,i){
+  const link=el("span","lg-place",label); link.setAttribute("role","link"); link.tabIndex=0;
+  const open=()=>{ sel=i; openInspector(); };
   link.addEventListener("click",open);
   link.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); open(); } });
-  p.appendChild(link);
+  return link;
+}
+/* One event's sentence, with the place it concerns turned into a link that
+   opens that hex's record. Prefers the [Label](#i) markdown link (see
+   PLACE_LINK_RE); falls back to matching the place's current name in the raw
+   text for chronicles generated before links were markdown tokens. */
+function eventText(e){
+  const p=el("p",""), m=PLACE_LINK_RE.exec(e.text);
+  if(m){
+    p.appendChild(document.createTextNode(e.text.slice(0,m.index)));
+    p.appendChild(placeLink(m[1],+m[2]));
+    p.appendChild(document.createTextNode(e.text.slice(m.index+m[0].length)));
+    return p;
+  }
+  const place=S.chronicle.places[e.i], at=place?e.text.indexOf(place.name):-1;
+  if(at<0){ p.textContent=e.text; return p; }
+  p.appendChild(document.createTextNode(e.text.slice(0,at)));
+  p.appendChild(placeLink(place.name,e.i));
   p.appendChild(document.createTextNode(e.text.slice(at+place.name.length)));
   return p;
 }
@@ -429,14 +469,24 @@ function eventRow(age,e){
   row.appendChild(el("span","lg-year","Year "+e.year));
   row.appendChild(eventText(e));
   row.appendChild(editButton("Edit this event",()=>{
+    // a legacy event (generated before links were markdown tokens) is upgraded to one on
+    // first edit, so its link to the hex survives from here on however the text is reworded
+    const place=S.chronicle.places[e.i];
+    const editable=PLACE_LINK_RE.test(e.text)||!place ? e.text : linkify(e.text,place.name,e.i);
     const yr=textInput(e.year,"lg-input lg-input-year"); yr.inputMode="numeric";
-    const tx=textInput(e.text,"lg-input"); tx.maxLength=400;
+    const tx=textInput(editable,"lg-input"); tx.maxLength=400;
     row.replaceChildren(yr,tx);
     wireEditor(row,[tx,yr],()=>{
       const text=tx.value.trim(), year=Math.max(age.start,Math.min(age.end,parseInt(yr.value,10)||e.year));
       if(!text||(text===e.text&&year===e.year)){ syncLore(); return; }
       // the year stays inside its age, so the ages never overlap or go empty
-      commit(()=>{ e.text=text; e.year=year; age.events.sort((a,b)=>a.year-b.year); });
+      commit(()=>{
+        e.text=text; e.year=year; age.events.sort((a,b)=>a.year-b.year);
+        // retyping this event's own link label (not just the surrounding prose) renames the POI everywhere
+        const ownTokenRe=new RegExp("\\[([^\\]]+)\\]\\(#"+e.i+"\\)"), m=ownTokenRe.exec(text);
+        const oldName=place?place.name:S.labels[e.i];
+        if(m&&oldName&&m[1]!==oldName){ S.labels[e.i]=m[1]; renameChroniclePlace(e.i,oldName,m[1]); }
+      });
     },syncLore);
   }));
   return row;
