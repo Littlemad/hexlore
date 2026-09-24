@@ -112,7 +112,7 @@ function noiseField(rand,period){
 /* Roll the map-wide facts: which edges are coast, how much land, how warm it is. */
 function pickClimate(rand){
   const g=Object.assign({},GEN_DEFAULTS,S.gen||{});
-  const edges=["W","E","N","S"], opp={W:"E",E:"W",N:"S",S:"N"}, coasts=[];
+  const edges=["W","E","N","S"], coasts=[];
   const landlocked= g.coast==="landlocked" || (g.coast!=="coastal"&&rand()<.2);
   if(!landlocked){
     const a=pick(rand,edges); coasts.push(a);
@@ -123,7 +123,6 @@ function pickClimate(rand){
   const relief=g.mountains/50;   // 1 = the default share of peaks and hills, 0 = flat, 2 = twice as much
   return { coasts, climate,
            landFrac: Math.max(.25,Math.min(.95, 1-g.sea/100+(rand()-.5)*.08)),
-           coldEdge: coasts.length?opp[coasts[0]]:pick(rand,edges),
            desertMap: climate==="cold" ? false : climate==="hot" ? g.desert>0 : rand()<g.desert/100,
            desertMul: .5+g.desert/60, desertNear: g.desert>=70 ? 2 : 3,   // a high setting lets sand reach closer to water
            tundraMap: climate==="cold"||(climate==="temperate"&&rand()<.4),
