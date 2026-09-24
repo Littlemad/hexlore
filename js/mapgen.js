@@ -521,7 +521,8 @@ const FLAVOURS=[
     grand:["minster","cester","chester","mouth","burgh","march","gate","hold","haven","ford"],
     keep:["{X} Keep","Castle {X}","{X} Hold","{X} Castle"], port:["Port {X}","{X}haven","{X}mouth","{X} Quay"],
     mine:["{X} Delve","{X} Pits","{X} Workings"], temple:["Shrine of {X}","{X} Abbey","{X} Priory"],
-    ruin:["Ruins of {X}","Old {X}","Fallen {X}"], tower:["{X} Tower","{X} Watch"] },
+    ruin:["Ruins of {X}","Old {X}","Fallen {X}"], tower:["{X} Tower","{X} Watch"],
+    bridge:["{X} Bridge","{X}bridge","Bridge of {X}","{X} Span"] },
   { onset:["Bjor","Dag","Eir","Fjal","Grim","Hal","Ing","Jor","Kald","Lund","Nord","Ran","Skar","Thor","Ulf","Vald","Ask","Bran","Frey","Gunn","Hav","Is","Kol","Lof","Mjol",
            "Odd","Rag","Sig","Stein","Tor","Var","Vig","Yng","Ost","Hel","Alf","Bor","Eld","Gud","Har","Kjel","Lang","Ny","Ros","Sol","Tind","Ulv","Vet"],
     join:["","","","","","a","e"],
@@ -529,7 +530,8 @@ const FLAVOURS=[
     grand:["borg","heim","gard","stad","havn","fjord","borg","vik"],
     keep:["{X} Borg","Castle {X}","{X} Hold","Borg {X}"], port:["Port {X}","{X}havn","{X} Harbour","{X}sund"],
     mine:["{X} Delve","{X} Gruve","{X} Pits"], temple:["Hof of {X}","Shrine of {X}","{X} Hof"],
-    ruin:["Ruins of {X}","Old {X}","{X} Barrow"], tower:["{X} Tower","{X} Vard"] },
+    ruin:["Ruins of {X}","Old {X}","{X} Barrow"], tower:["{X} Tower","{X} Vard"],
+    bridge:["{X}bru","{X} Bru","Bridge of {X}","{X} Span"] },
   { onset:["Aur","Bel","Cal","Dor","Ele","Fal","Gal","Ira","Lor","Mar","Nov","Ost","Pal","Ros","Sal","Tar","Val","Ver","Ald","Bri","Cas","Del","Est","Flor","Gra",
            "Hel","Ill","Lum","Mon","Nar","Or","Per","Quer","Sev","Tul","Vic","Zar","Am","Cor","Lus","Cel","Dam","Fer","Lav","Mir","Ol","Rav","Sil","Ter","Vol"],
     join:["","","","","en","an","in"],
@@ -537,7 +539,8 @@ const FLAVOURS=[
     grand:["opolis","oria","ium","agne","anza","ia Magna","um","ossa"],
     keep:["Castel {X}","Rocca {X}","{X} Keep","Forte {X}"], port:["Porto {X}","Port {X}","{X} Marina","{X} Portus"],
     mine:["{X} Mines","{X} Delve","{X} Quarry"], temple:["Temple of {X}","Sanctum of {X}","{X} Sanctum"],
-    ruin:["Ruins of {X}","Old {X}","{X} Antica"], tower:["{X} Tower","Torre {X}"] }
+    ruin:["Ruins of {X}","Old {X}","{X} Antica"], tower:["{X} Tower","Torre {X}"],
+    bridge:["Ponte {X}","{X} Ponte","Bridge of {X}","{X} Passo"] }
 ];
 /* Names for the places worth naming, deduplicated and clipped to the label limit. */
 function nameThings(placed,rand){
@@ -557,7 +560,8 @@ function nameThings(placed,rand){
       case "ruin":   name=fill(pick(rand,F.ruin),false); break;
       case "tower":  name=fill(pick(rand,F.tower),false); break;
       case "cave":   name=fill(pick(rand,F.ruin),false); break;
-      case "camp": case "battle": case "bridge": case "mark": name=stem(false); break;
+      case "bridge": name=fill(pick(rand,F.bridge),false); break;
+      case "camp": case "battle": case "mark": name=stem(false); break;
     }
     if(name){ name=name.slice(0,28); labels[q.i]=name; used.add(name); }
   });
