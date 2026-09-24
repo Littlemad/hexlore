@@ -120,10 +120,12 @@ function selectPath(id){ curP=id; setLayer("path"); }
 /* Select a point of interest and switch to the feature layer. */
 function selectFeature(id){ curF=id; setLayer("feature"); }
 
-/* Create a small off-screen canvas for a swatch thumbnail. */
+/* Create a small off-screen canvas for a swatch thumbnail. CSS stretches it to
+   the swatch width, so it is drawn at twice the pixel density: shrinking a
+   bitmap stays sharp, enlarging one blurs. */
 function chip(w,h,fn){
   const el=document.createElement("canvas");
-  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const dpr=2*Math.min(2,window.devicePixelRatio||1);
   el.width=w*dpr; el.height=h*dpr; el.style.aspectRatio=w+"/"+h;
   const c=el.getContext("2d"); c.scale(dpr,dpr); fn(c,w,h);
   return el;
