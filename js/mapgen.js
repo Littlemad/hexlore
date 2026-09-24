@@ -192,17 +192,19 @@ function placeLakes(terr,R,rand,cfg){
   for(const i of cands){
     if(placed.length>=want) break;
     if(placed.some(j=>hexDist(cr(i),cr(j))<5)) continue;
+    const mine=new Set([i]);
     terr[i]=lake; placed.push(i);
     // lakes scale with slider: at 100%, grow to 4-6 hexes; at 50%, 2-3 hexes
     let grow=rand()<Math.min(1,.4*cfg.lakes)?Math.max(1,Math.round(cfg.lakes*2)):0;
     let cur=i;
     while(grow-->0){
       const cand=nbs(cur).filter(j=>ok(j)&&!nbs(j).some(k=>terr[k]===T("sea"))).sort((a,b)=>R.p[a]-R.p[b])[0];
-      if(cand===undefined) break; terr[cand]=lake; cur=cand;
+      if(cand===undefined) break; terr[cand]=lake; mine.add(cand); cur=cand;
     }
-    // organic growth: add extra hexes around the lake shore to avoid straight lines
-    const shore=new Set(); for(const l of land) if(terr[l]===lake) nbs(l).forEach(j=>{ if(!isWater(terr,j)&&ok(j)) shore.add(j); });
-    for(const l of shore) if(rand()<.35&&!isWater(terr,l)&&ok(l)&&!nbs(l).some(k=>terr[k]===T("sea"))) terr[l]=lake;
+    // organic growth: add extra hexes around this lake's own shore, to avoid straight lines;
+    // scoped to `mine` so placing one lake never re-grows an earlier one
+    const shore=new Set(); for(const l of mine) nbs(l).forEach(j=>{ if(!isWater(terr,j)&&ok(j)) shore.add(j); });
+    for(const l of shore) if(rand()<.35&&!isWater(terr,l)&&ok(l)&&!nbs(l).some(k=>terr[k]===T("sea"))){ terr[l]=lake; mine.add(l); }
   }
 }
 
@@ -305,7 +307,7 @@ function assignBiomes(terr,R,M,cfg,rand){
     else if(m[i]>.50) id="forest";
     // frozen ground is the cold-climate mirror of desert: a moisture threshold
     // that scales across the whole map, instead of a band pinned to one edge
-    else if(cfg.tundraMap&&m[i]<.45) id="tundra";
+    else if(cfg.tundraMap&&m[i]<.38) id="tundra";
     else id="plain";
     terr[i]=T(id);
   }
