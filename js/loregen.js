@@ -26,6 +26,13 @@
    -------------------------------------------------------------------------- */
 "use strict";
 
+/* The whole file is one closure, same as mapgen.js, so its local helpers
+   (starting with pick/mulberry below) do not leak into the shared global
+   scope and collide with same-named functions elsewhere (geometry.js's
+   hex-picking pick(), in particular). Only the functions other files call
+   through a typeof guard are exposed on window at the bottom. */
+(function(){
+
 /* ---- small local helpers (own copies, same idea as mapgen.js's private ones) */
 
 function mulberry(a){ return ()=>{ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^a>>>15,a|1);
@@ -513,3 +520,10 @@ document.getElementById("genLore").onclick=()=>{
   push(); generateChronicle(); store();
   syncLore();
 };
+
+window.validChronicle=validChronicle;
+window.chronicleEntry=chronicleEntry;
+window.renameChroniclePlace=renameChroniclePlace;
+window.buildChronicleTimeline=buildChronicleTimeline;
+
+})();

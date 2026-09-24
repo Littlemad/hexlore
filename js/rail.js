@@ -294,17 +294,27 @@ SHOW.forEach(([id,k])=>{
   };
 })();
 
-/* Collapsible rail groups remember whether they were open across reloads. */
+/* Collapsible rail groups remember whether they were open across reloads;
+   groups the user never touched start closed. The "Expand/Collapse all"
+   link mirrors whatever state that leaves the groups in. */
 (function(){
   let saved={};
   try{ saved=JSON.parse(localStorage.getItem("hexlore.rail")||"{}"); }catch(e){}
-  document.querySelectorAll("details.grp").forEach(d=>{
-    if(d.id in saved) d.open=!!saved[d.id];
-    d.addEventListener("toggle",()=>{
-      saved[d.id]=d.open;
-      try{ localStorage.setItem("hexlore.rail",JSON.stringify(saved)); }catch(e){}
-    });
+  const groups=[...document.querySelectorAll("details.grp")];
+  const toggleAll=document.getElementById("railToggleAll");
+  function save(){ try{ localStorage.setItem("hexlore.rail",JSON.stringify(saved)); }catch(e){} }
+  function syncLabel(){ toggleAll.textContent = groups.every(d=>d.open) ? "Collapse all categories" : "Expand all categories"; }
+  groups.forEach(d=>{
+    d.open = !!saved[d.id];
+    d.addEventListener("toggle",()=>{ saved[d.id]=d.open; save(); syncLabel(); });
   });
+  toggleAll.onclick=e=>{
+    e.preventDefault();
+    const open=!groups.every(d=>d.open);
+    groups.forEach(d=>{ d.open=open; saved[d.id]=open; });
+    save(); syncLabel();
+  };
+  syncLabel();
 })();
 
 document.getElementById("clear").onclick=()=>{ push(); blank(); closeInspector(); refresh(); store(); };

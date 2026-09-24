@@ -89,7 +89,9 @@
     </div>
 
     <!-- collapsible groups: <details> remembers open/closed per id in localStorage (rail.js) -->
-    <details class="grp" id="g-map" open>
+    <div class="rail-toggle"><a href="#" id="railToggleAll">Expand all categories</a></div>
+
+    <details class="grp" id="g-map">
       <summary><h2>Map sheet</h2></summary>
       <div class="row"
         ><label for="cols">Columns</label><input type="range" id="cols" min="4" max="40" value="20" /><output
@@ -106,8 +108,8 @@
       <div class="stack" style="margin-top:10px"><button class="btn" id="clear" title="Clear every hex, path and note on the sheet">Erase map</button></div>
     </details>
 
-    <details class="grp" id="g-tool" open>
-      <summary><h2>Tool</h2></summary>
+    <details class="grp" id="g-tool">
+      <summary><h2>Tools</h2></summary>
       <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="btn" id="undo" title="Undo (Ctrl+Z)" disabled style="flex:1">Undo</button>
         <button class="btn" id="redo" title="Redo (Ctrl+Shift+Z)" disabled style="flex:1">Redo</button>
@@ -119,26 +121,22 @@
         <input type="range" id="brush" min="0" max="2" step="1" value="0" />
         <output id="brushOut">1 hex</output>
       </div>
-    </details>
-
-    <details class="grp" id="g-tiles" open>
-      <summary><h2>Tiles</h2></summary>
-      <div class="swatches" id="terrains"></div>
+      <div class="swatches" id="terrains" style="margin-top:10px"></div>
       <div class="stack"><button class="btn" id="newTile">+ New tile</button></div>
     </details>
 
-    <details class="grp" id="g-poi" open>
-      <summary><h2>Point of interest</h2></summary>
+    <details class="grp" id="g-poi">
+      <summary><h2>Points of interest</h2></summary>
       <div class="swatches" id="features"></div>
       <div class="stack"><button class="btn" id="newFeat">+ New point of interest</button></div>
     </details>
 
-    <details class="grp" id="g-paths" open>
+    <details class="grp" id="g-paths">
       <summary><h2>Paths</h2></summary>
       <div class="swatches" id="paths"></div>
     </details>
 
-    <details class="grp" id="g-show" open>
+    <details class="grp" id="g-show">
       <summary><h2>Show/Hide</h2></summary>
       <div class="row" style="margin-top:0">
         <label for="hexOpacity" style="flex:0 0 80px;font-size:13.5px;color:var(--dim)">Hex opacity</label>
@@ -152,7 +150,7 @@
       <div class="checks" style="margin-top:10px">
         <label class="check"><input type="checkbox" id="cCoord" checked /> Coordinates</label>
         <label class="check"><input type="checkbox" id="cNotes" checked /> Note marks</label>
-        <label class="check"><input type="checkbox" id="cMono" /> Monochrome</label>
+        <label class="check"><input type="checkbox" id="cMono" /> Monochrome Tiles</label>
       </div>
     </details>
   </div>
@@ -173,11 +171,9 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Print button: available from both map and Lore views -->
-  <div class="grp" style="border-bottom:0">
-    <div class="stack"><button class="btn key" id="print">Print Lore</button></div>
+    <div class="grp" style="border-bottom:0">
+      <div class="stack"><button class="btn key" id="print">Print Lore</button></div>
+    </div>
   </div>
   </div>
 

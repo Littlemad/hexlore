@@ -218,6 +218,11 @@ footer .hint{overflow:hidden;text-overflow:ellipsis}
 /* on the map the stage starts a shade lighter than the ink, so match the seam */
 body[data-view="map"] .tabs button[aria-pressed="true"]{background:#0F1F13}
 
+.rail-toggle{padding:16px 14px 0;text-align:left}
+.rail-toggle a{font:500 11.5px/1 "IBM Plex Mono",monospace;letter-spacing:.05em;
+  color:var(--accent);text-decoration:none;cursor:pointer}
+.rail-toggle a:hover{text-decoration:underline}
+
 .grp{padding:10px 14px 12px}
 .grp h2{margin:0 0 10px; font:500 11.5px/1 "IBM Plex Mono",monospace;
   letter-spacing:.15em; text-transform:uppercase; color:var(--dim);
@@ -446,6 +451,7 @@ textarea{resize:vertical;min-height:66px;line-height:1.4}
   #lore .lore-name{font-size:13pt;color:#000}
   #lore .lore-meta{margin-bottom:2.5mm;color:#444;font-size:11pt}
   #lore .lore-txt{font-size:13pt;line-height:1.7;color:#000}
+  #lore .lore-empty{column-span:all;color:#444;font-size:12pt}
   /* the timeline may run over a page: break between events, never inside one,
      and keep an age's heading with its first event. Nothing interactive prints. */
   #lore .lg-timeline{column-span:all;margin-bottom:6mm}
