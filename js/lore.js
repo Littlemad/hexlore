@@ -51,7 +51,7 @@ function buildLore(){
     list.length+" annotated hex"+(list.length===1?"":"es")+" · "+S.cols+"×"+S.rows;
   loreBody.innerHTML="";
   if(!list.length){
-    loreBody.appendChild(el("p","lore-empty","No lore yet. Use the Inspect tool to annotate hexes, or place a point of interest."));
+    loreBody.appendChild(el("p","lore-empty","No lore yet. Use the Lore tool to annotate hexes, or place a point of interest."));
     return;
   }
   list.forEach(i=>{

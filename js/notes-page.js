@@ -21,7 +21,7 @@ function buildNotesPage(){
   if(!keys.length){
     const p=document.createElement("p");
     p.style.cssText="color:var(--dimmer);font:400 15px/1.6 'IBM Plex Mono',monospace;grid-column:1/-1";
-    p.textContent="No notes yet. Use the Inspect tool to annotate hexes.";
+    p.textContent="No notes yet. Use the Lore tool to annotate hexes.";
     body.appendChild(p); return;
   }
   keys.sort((a,b)=>+a-+b).forEach(k=>{
